@@ -1,0 +1,16 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/api/api.csproj" />
+    <Project Path="src/application/application.csproj" />
+    <Project Path="src/domain/domain.csproj" />
+    <Project Path="src/infra/infra.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/domain.tests/domain.tests.csproj" />
+  </Folder>
+</Solution>

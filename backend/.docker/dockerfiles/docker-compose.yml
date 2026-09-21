@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - JwtConfig__Key=w5kXVM5xqRJg2mVtq64Qx74GZu9uuJe7fQFpCGUguG27m4yTpLpENK1FEyKDM9LG
+      - ConnectionStrings__MySql=server=localhost;port=3306;database=academyhub;user=root;password=12345;Connect Timeout=300
+

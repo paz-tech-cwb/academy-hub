@@ -1,0 +1,8 @@
+﻿.vs
+
+*bin/
+*obj/
+
+project-dependency-graph.dot
+coverage_report
+**/TestResults/

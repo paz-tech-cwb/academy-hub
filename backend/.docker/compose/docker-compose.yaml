@@ -1,0 +1,22 @@
+services:
+  db:
+    container_name: academy-hub-mysql
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: academyhub
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql-init:/docker-entrypoint-initdb.d
+
+  open-observe:
+    container_name: open-observe
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    environment:
+      ZO_ROOT_USER_EMAIL: admin@example.com
+      ZO_ROOT_USER_PASSWORD: Rj6?neEE%Fk7)67U
+      ZO_ORG_NAME: academyhub
+      ZO_FEATURE_OTLP_ENABLED: true
+    ports:
+      - 5080:5080

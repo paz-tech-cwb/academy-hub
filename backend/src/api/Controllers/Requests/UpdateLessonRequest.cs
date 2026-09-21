@@ -1,0 +1,21 @@
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace api.Controllers.Requests
+{
+    public class UpdateLessonRequest
+    {
+        [Description("Título da aula")]
+        [Required]
+        public required string Title { get; set; }
+
+        [Description("Descrição da aula")]
+        public string? Description { get; set; }
+
+        [Description("Ordem da aula dentro da unidade")]
+        public int Sequence { get; set; }
+
+        [Description("URL do vídeo da aula")]
+        public string? VideoUrl { get; set; }
+    }
+}
