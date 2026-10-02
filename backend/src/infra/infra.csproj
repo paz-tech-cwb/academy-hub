@@ -13,6 +13,6 @@
     <PackageReference Include="Selenium.WebDriver" Version="4.43.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\domain\domain.csproj" />
+    <ProjectReference Include="..\application\application.csproj" />
   </ItemGroup>
 </Project>
