@@ -39,21 +39,21 @@ export const lessonsApi = {
    * Cria uma nova aula dentro de uma unidade (admin).
    */
   create: async (payload: CreateLessonInput) => {
-    await api.post('/api/admin/lesson', payload);
+    await api.post('/api/lesson', payload);
   },
 
   /**
    * Atualiza uma aula (admin).
    */
   update: async (publicId: string, payload: UpdateLessonInput) => {
-    await api.put(`/api/admin/lesson/${publicId}`, payload);
+    await api.put(`/api/lesson/${publicId}`, payload);
   },
 
   /**
    * Remove uma aula e seus vínculos em cascata (admin).
    */
   remove: async (publicId: string) => {
-    await api.delete(`/api/admin/lesson/${publicId}`);
+    await api.delete(`/api/lesson/${publicId}`);
   },
 
   /**
@@ -61,7 +61,7 @@ export const lessonsApi = {
    * alternativas com `isCorrect`). Requer role de admin.
    */
   getAdminDetail: async (publicId: string) => {
-    const { data } = await api.get<AdminLesson>(`/api/admin/lesson/${publicId}`);
+    const { data } = await api.get<AdminLesson>(`/api/lesson/${publicId}`);
     return data;
   },
 };

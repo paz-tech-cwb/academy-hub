@@ -1,17 +1,17 @@
 using api.Controllers.Requests;
 using application.UseCases;
+using domain.Entities;
 using domain.Interfaces.Repositories;
-using domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers
 {
-    [Route("api/admin/question")]
+    [Route("api/question")]
     [ApiController]
     [Authorize(Roles = "Admin")]
-    [Tags("Admin - Questões")]
-    public class AdminQuestionController(IQuestionRepository questionRepository, CreateQuestionUseCase createQuestionUseCase, DeleteQuestionUseCase deleteQuestionUseCase) : ControllerBase
+    [Tags("Questões")]
+    public class QuestionController(IQuestionRepository questionRepository, CreateQuestionUseCase createQuestionUseCase, DeleteQuestionUseCase deleteQuestionUseCase) : ControllerBase
     {
         [EndpointSummary("Criar questão")]
         [EndpointDescription("Cria uma questão dentro de uma aula existente (referenciada por publicId).")]

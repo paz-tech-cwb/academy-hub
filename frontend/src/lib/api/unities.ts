@@ -39,7 +39,7 @@ export const unitiesApi = {
    * Cria uma nova unidade (admin).
    */
   create: async (payload: CreateUnityInput) => {
-    await api.post('/api/admin/unity', payload);
+    await api.post('/api/unity', payload);
   },
 
   /**
@@ -48,13 +48,13 @@ export const unitiesApi = {
    * @param publicId - PublicId da unidade.
    */
   update: async (publicId: string, payload: UpdateUnityInput) => {
-    await api.put(`/api/admin/unity/${publicId}`, payload);
+    await api.put(`/api/unity/${publicId}`, payload);
   },
 
   /**
    * Remove uma unidade e todos os seus vínculos em cascata (admin).
    */
   remove: async (publicId: string) => {
-    await api.delete(`/api/admin/unity/${publicId}`);
+    await api.delete(`/api/unity/${publicId}`);
   },
 };

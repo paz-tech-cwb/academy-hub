@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers
 {
-    [Route("api/admin/alternative")]
+    [Route("api/alternative")]
     [ApiController]
     [Authorize(Roles = "Admin")]
-    [Tags("Admin - Alternativas")]
-    public class AdminAlternativeController(CreateAlternativeUseCase createAlternativeUseCase, UpdateAlternativeUseCase updateAlternativeUseCase, DeleteAlternativeUseCase deleteAlternativeUseCase) : ControllerBase
+    [Tags("Alternativas")]
+    public class AlternativeController(CreateAlternativeUseCase createAlternativeUseCase, UpdateAlternativeUseCase updateAlternativeUseCase, DeleteAlternativeUseCase deleteAlternativeUseCase) : ControllerBase
     {
         [EndpointSummary("Criar alternativa")]
         [EndpointDescription("Cria uma alternativa para uma questão (referenciada por publicId). Se for marcada como correta, desmarca as demais da mesma questão.")]

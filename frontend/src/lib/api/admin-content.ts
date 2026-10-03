@@ -11,41 +11,41 @@ export const adminContentApi = {
    * Cria uma questão dentro de uma aula (admin).
    */
   createQuestion: async (payload: CreateQuestionInput) => {
-    await api.post('/api/admin/question', payload);
+    await api.post('/api/question', payload);
   },
 
   /**
    * Atualiza o enunciado de uma questão (admin).
    */
   updateQuestion: async (publicId: string, payload: UpdateQuestionInput) => {
-    await api.put(`/api/admin/question/${publicId}`, payload);
+    await api.put(`/api/question/${publicId}`, payload);
   },
 
   /**
    * Remove uma questão e seus vínculos em cascata (admin).
    */
   deleteQuestion: async (publicId: string) => {
-    await api.delete(`/api/admin/question/${publicId}`);
+    await api.delete(`/api/question/${publicId}`);
   },
 
   /**
    * Cria uma alternativa. Se `isCorrect` for true, desmarca as demais da questão (admin).
    */
   createAlternative: async (payload: CreateAlternativeInput) => {
-    await api.post('/api/admin/alternative', payload);
+    await api.post('/api/alternative', payload);
   },
 
   /**
    * Atualiza texto/corretude de uma alternativa (admin).
    */
   updateAlternative: async (publicId: string, payload: UpdateAlternativeInput) => {
-    await api.put(`/api/admin/alternative/${publicId}`, payload);
+    await api.put(`/api/alternative/${publicId}`, payload);
   },
 
   /**
    * Remove uma alternativa e as respostas vinculadas (admin).
    */
   deleteAlternative: async (publicId: string) => {
-    await api.delete(`/api/admin/alternative/${publicId}`);
+    await api.delete(`/api/alternative/${publicId}`);
   },
 };

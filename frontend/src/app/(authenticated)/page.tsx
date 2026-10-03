@@ -97,59 +97,64 @@ export default function HomePage() {
             ))}
 
           {unities?.map((unity) => (
-            <Link
-              key={unity.publicId}
-              href={`/unity/${encodeURIComponent(unity.name)}`}
-            >
-              <Card variant="interactive" className="group">
-                <div className="h-48 bg-muted relative">
-                  {unity.unityCover ? (
-                    <Image
-                      src={unity.unityCover}
-                      alt={unity.name}
-                      fill
-                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                      className="object-cover transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-primary/20 to-secondary/20">
-                      <BookOpen className="w-12 h-12 text-primary/40" />
-                    </div>
-                  )}
-                  {isAdmin && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1">
-                      <Button
-                        size="icon"
-                        variant="secondary"
-                        className="w-8 h-8"
-                        onClick={() => {
-                          setEditingUnity(unity);
-                          setUnityDialogOpen(true);
-                        }}
-                      >
-                        <Pencil className="w-4 h-4" />
-                        <span className="sr-only">Editar unidade</span>
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        className="w-8 h-8"
-                        onClick={() => setUnityToDelete(unity)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span className="sr-only">Excluir unidade</span>
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                <CardHeader>
-                  <CardTitle>{unity.name}</CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {unity.description || "Nenhuma descrição disponível."}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </Link>
+            <Card key={unity.publicId} variant="interactive" className="group">
+              <div className="h-48 bg-muted relative">
+                {unity.unityCover ? (
+                  <Image
+                    src={unity.unityCover}
+                    alt={unity.name}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                    className="object-cover transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-primary/20 to-secondary/20">
+                    <BookOpen className="w-12 h-12 text-primary/40" />
+                  </div>
+                )}
+                {isAdmin && (
+                  <div className="absolute top-2 right-2 flex items-center gap-1">
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="w-8 h-8"
+                      onClick={() => {
+                        setEditingUnity(unity);
+                        setUnityDialogOpen(true);
+                      }}
+                    >
+                      <Pencil className="w-4 h-4" />
+                      <span className="sr-only">Editar unidade</span>
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      className="w-8 h-8"
+                      onClick={() => setUnityToDelete(unity)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span className="sr-only">Excluir unidade</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <CardHeader>
+                <CardTitle>{unity.name}</CardTitle>
+                <CardDescription className="line-clamp-2">
+                  {unity.description || "Nenhuma descrição disponível."}
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="flex justify-between items-center gap-4">
+                <Button
+                  asChild
+                  className="w-full group-hover:bg-primary transition-colors"
+                >
+                  <Link href={`/unity/${encodeURIComponent(unity.name)}`}>
+                    Ver Aulas
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
 
