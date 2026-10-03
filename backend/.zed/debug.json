@@ -1,0 +1,17 @@
+[
+  {
+    "label": "Debug api",
+    "adapter": "netcoredbg",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/src/api/bin/Debug/net10.0/api.dll",
+    "cwd": "$ZED_WORKTREE_ROOT/src/api",
+    "env": {
+      "ASPNETCORE_ENVIRONMENT": "Development",
+      "ASPNETCORE_URLS": "http://localhost:5165;https://localhost:7034",
+    },
+    "justMyCode": true,
+    "build": {
+      "command": "dotnet build"
+    },
+  },
+]
