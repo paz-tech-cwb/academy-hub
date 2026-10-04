@@ -140,17 +140,20 @@ export default function UsersSettingsPage() {
       columnHelper.columns([
         columnHelper.accessor('username', {
           header: 'Username',
+          meta: { width: 260 },
           cell: (info) => (
             <span className="block max-w-[220px] truncate font-medium">{info.getValue()}</span>
           ),
         }),
         columnHelper.accessor('experience', {
           header: 'Experiência',
+          meta: { width: 130 },
           cell: (info) => info.getValue(),
         }),
         columnHelper.display({
           id: 'password',
           header: 'Senha',
+          meta: { width: 200 },
           cell: ({ row }) =>
             editingId === row.original.publicId ? (
               <Input
@@ -167,6 +170,7 @@ export default function UsersSettingsPage() {
         columnHelper.display({
           id: 'status',
           header: 'Status',
+          meta: { width: 130 },
           cell: ({ row }) =>
             editingId === row.original.publicId ? (
               <Switch
@@ -184,6 +188,7 @@ export default function UsersSettingsPage() {
         columnHelper.display({
           id: 'role',
           header: 'Role',
+          meta: { width: 150 },
           cell: ({ row }) =>
             editingId === row.original.publicId ? (
               <Select
@@ -207,6 +212,7 @@ export default function UsersSettingsPage() {
         columnHelper.display({
           id: 'actions',
           header: () => <div className="text-right">Ações</div>,
+          meta: { width: 120 },
           cell: ({ row }) =>
             editingId === row.original.publicId ? (
               <div className="flex justify-end gap-2">

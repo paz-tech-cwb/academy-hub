@@ -52,12 +52,16 @@ export function DataTable<TData extends RowData>({
   return (
     <div>
       <div className="overflow-hidden rounded-md border">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    style={{ width: header.column.columnDef.meta?.width }}
+                    className={header.column.columnDef.meta?.className}
+                  >
                     {header.isPlaceholder ? null : <table.FlexRender header={header} />}
                   </TableHead>
                 ))}
