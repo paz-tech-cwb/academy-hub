@@ -176,7 +176,7 @@ export default function UsersSettingsPage() {
                 }
               />
             ) : (
-              <span className={row.original.status ? 'text-green-600' : 'text-red-600'}>
+              <span className={row.original.status ? 'text-success' : 'text-destructive'}>
                 {row.original.status ? 'Ativo' : 'Inativo'}
               </span>
             ),

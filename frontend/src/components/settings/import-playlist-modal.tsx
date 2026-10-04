@@ -57,7 +57,7 @@ export default function ImportPlaylistModal({ open, onOpenChange }: Props) {
       <DialogContent>
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <ListVideo className="w-5 h-5 text-red-500" />
+            <ListVideo className="w-5 h-5 text-destructive" />
             <DialogTitle>Importar Playlist do YouTube</DialogTitle>
           </div>
           <DialogDescription>

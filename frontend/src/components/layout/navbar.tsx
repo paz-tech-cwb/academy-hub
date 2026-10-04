@@ -4,12 +4,25 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, BookOpen, Award, Settings2 } from 'lucide-react';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import { LogOut, BookOpen, Award, Settings2, Menu } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { UserRole } from '@/types';
 
+const menuItemClass =
+  'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground';
+
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const isAdmin = user?.profile?.role === UserRole.Admin;
 
   return (
     <nav className="border-b bg-card text-card-foreground sticky top-0 z-50">
@@ -26,11 +39,6 @@ export default function Navbar() {
             <Link href="/certificates" className="text-sm font-medium hover:text-primary flex items-center gap-1">
               <Award className="w-4 h-4" /> Certificados
             </Link>
-            {user?.profile?.role === UserRole.Admin && (
-              <Link href="/settings" className="text-sm font-medium hover:text-primary flex items-center gap-1">
-                <Settings2 className="w-4 h-4" /> Configurações
-              </Link>
-            )}
           </div>
 
           {user && (
@@ -55,9 +63,43 @@ export default function Navbar() {
                     {user.username.substring(0, 2)}
                   </AvatarFallback>
                 </Avatar>
-                <Button variant="ghost" size="icon" onClick={logout} title="Sair">
-                  <LogOut className="h-5 w-5" />
-                </Button>
+
+                <Drawer swipeDirection="right">
+                  <DrawerTrigger render={<Button variant="ghost" size="icon" aria-label="Abrir menu" />}>
+                    <Menu className="h-5 w-5" />
+                  </DrawerTrigger>
+                  <DrawerContent className="w-80 max-w-[85vw]">
+                    <DrawerHeader className="border-b pb-4">
+                      <DrawerTitle>Menu</DrawerTitle>
+                      <DrawerDescription>
+                        {user.username}
+                        {user.profile ? ` · Nível ${user.profile.level}` : ''}
+                      </DrawerDescription>
+                    </DrawerHeader>
+
+                    <div className="flex flex-col gap-1 p-2">
+                      {isAdmin && (
+                        <DrawerClose
+                          nativeButton={false}
+                          render={<Link href="/settings" className={menuItemClass} />}
+                        >
+                          <Settings2 className="w-4 h-4" /> Configurações
+                        </DrawerClose>
+                      )}
+                      <DrawerClose
+                        render={
+                          <Button
+                            variant="ghost"
+                            onClick={logout}
+                            className="justify-start gap-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          />
+                        }
+                      >
+                        <LogOut className="w-4 h-4" /> Sair
+                      </DrawerClose>
+                    </div>
+                  </DrawerContent>
+                </Drawer>
               </div>
             </div>
           )}

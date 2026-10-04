@@ -13,7 +13,6 @@ import Navbar from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle2, PlayCircle, ClipboardList, Send, Loader2, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
@@ -244,7 +243,7 @@ export default function LessonPage() {
                   const isWrong = verifyResult?.answers.find(a => a.publicQuestionId === question.publicId)?.isCorrect === false;
 
                   return (
-                    <Card key={question.publicId} className={`border-2 overflow-hidden transition-all ${isWrong ? 'border-destructive/30' : isCorrect ? 'border-green-500/30' : ''}`}>
+                    <Card key={question.publicId} className={`border-2 overflow-hidden transition-all ${isWrong ? 'border-destructive/30' : isCorrect ? 'border-success/30' : ''}`}>
                       <CardHeader className="bg-muted/30">
                         <CardTitle className="text-lg flex gap-3">
                           <span className="text-primary opacity-50">{qIndex + 1}.</span>
@@ -277,10 +276,10 @@ export default function LessonPage() {
                 })}
 
                 {verifyResult && (
-                  <Card className={`border-2 ${lessonComplete ? 'bg-green-500/5 border-green-500/20' : 'bg-destructive/5 border-destructive/20'}`}>
+                  <Card className={`border-2 ${lessonComplete ? 'bg-success/5 border-success/20' : 'bg-destructive/5 border-destructive/20'}`}>
                     <CardContent className="p-6 flex items-start gap-4">
                       {lessonComplete ? (
-                        <CheckCircle2 className="w-8 h-8 text-green-500 shrink-0" />
+                        <CheckCircle2 className="w-8 h-8 text-success shrink-0" />
                       ) : (
                         <AlertCircle className="w-8 h-8 text-destructive shrink-0" />
                       )}

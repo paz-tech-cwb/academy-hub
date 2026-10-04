@@ -39,7 +39,7 @@ export default function SettingsPage() {
           'Importe vídeos de uma playlist do YouTube como uma nova unidade de treinamento.',
         actionLabel: 'Importar playlist',
         icon: ListVideo,
-        iconClassName: 'text-red-500',
+        iconClassName: 'text-destructive',
         action: () => setShowImportModal(true),
       },
       {

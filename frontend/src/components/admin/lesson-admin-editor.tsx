@@ -243,7 +243,7 @@ export function LessonAdminEditor({
                   <div
                     key={alt.publicId}
                     className={`flex items-center gap-3 border rounded-lg p-3 group transition-colors ${
-                      alt.isCorrect ? 'border-green-500/40 bg-green-500/5' : 'hover:bg-muted/50'
+                      alt.isCorrect ? 'border-success/40 bg-success/5' : 'hover:bg-muted/50'
                     }`}
                   >
                     <RadioGroupItem

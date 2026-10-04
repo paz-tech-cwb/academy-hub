@@ -162,14 +162,14 @@ export default function UnityPage() {
             <Card
               key={lesson.publicId}
               variant="interactive"
-              className={lesson.concluded ? 'bg-secondary/20 border-green-500/20' : ''}
+              className={lesson.concluded ? 'bg-secondary/20 border-success/20' : ''}
             >
               <CardContent className="p-0">
                 <Link
                   href={`/unity/${unityNameParam}/lesson/${encodeURIComponent(lesson.title)}`}
                   className="flex items-center p-4 sm:p-6 gap-4 sm:gap-6 group"
                 >
-                  <div className={`shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-xl font-bold transition-colors ${lesson.concluded ? 'bg-green-500/20 text-green-500' : 'bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary'}`}>
+                  <div className={`shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-xl font-bold transition-colors ${lesson.concluded ? 'bg-success/20 text-success' : 'bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary'}`}>
                     {lesson.concluded ? <CheckCircle2 className="w-8 h-8" /> : index + 1}
                   </div>
 
