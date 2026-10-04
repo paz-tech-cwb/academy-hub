@@ -21,6 +21,27 @@ export interface LoginResponse {
   message: string;
 }
 
+export interface ManagedUser {
+  publicId: string;
+  username: string;
+  experience: number;
+  status: boolean;
+  role: UserRole;
+}
+
+export interface PaginatedUsers {
+  items: ManagedUser[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface UpdateUserInput {
+  status?: boolean;
+  role?: UserRole;
+}
+
 export interface Unity {
   publicId: string;
   name: string;

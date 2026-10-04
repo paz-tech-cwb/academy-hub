@@ -1,9 +1,23 @@
 import api from '@/lib/axios';
-import { LoginResponse, UserProfile } from '@/types';
+import {
+  LoginResponse,
+  PaginatedUsers,
+  UpdateUserInput,
+  UserProfile,
+  UserRole,
+} from '@/types';
 
 export interface AuthCredentials {
   username: string;
   password: string;
+}
+
+export interface ListUsersParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: boolean;
+  role?: UserRole;
 }
 
 export const usersApi = {
@@ -41,5 +55,38 @@ export const usersApi = {
   getProfile: async (username: string) => {
     const { data } = await api.get<UserProfile>(`/api/user/${username}`);
     return data;
+  },
+
+  /**
+   * Lista usuários paginados com filtros opcionais (admin).
+   *
+   * @param params - Página, tamanho e filtros de username/status/role.
+   * @returns Lista paginada de usuários.
+   */
+  listUsers: async (params: ListUsersParams = {}) => {
+    const { data } = await api.get<PaginatedUsers>('/api/user', {
+      params,
+    });
+    return data;
+  },
+
+  /**
+   * Atualiza status e/ou role de um usuário (admin).
+   *
+   * @param publicId - PublicId do usuário.
+   * @param payload - Campos a atualizar.
+   */
+  updateUser: async (publicId: string, payload: UpdateUserInput) => {
+    await api.put(`/api/user/${publicId}`, payload);
+  },
+
+  /**
+   * Redefine a senha de um usuário (admin).
+   *
+   * @param publicId - PublicId do usuário.
+   * @param newPassword - Nova senha em texto plano.
+   */
+  resetUserPassword: async (publicId: string, newPassword: string) => {
+    await api.put(`/api/user/${publicId}/password`, { newPassword });
   },
 };
