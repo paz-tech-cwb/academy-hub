@@ -147,7 +147,7 @@ export default function UnityPage() {
           )}
           {isLoading && !!!lessons &&
             Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i}>
+              <Card key={i} variant="interactive">
                 <CardContent className="flex items-center p-4 sm:p-6 gap-4 sm:gap-6 group">
                   <Skeleton className="shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-2xl" />
                   <div className="flex-1 space-y-2">

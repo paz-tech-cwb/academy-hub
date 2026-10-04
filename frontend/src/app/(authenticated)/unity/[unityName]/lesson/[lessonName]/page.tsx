@@ -185,13 +185,13 @@ export default function LessonPage() {
         {isLoading ? (
           <div className="space-y-6">
             <Skeleton className="h-12 w-full max-w-md" />
-            <Skeleton className="aspect-video w-full rounded-2xl" />
-            <div className="rounded-xl border bg-card p-6 space-y-3">
+            <Skeleton className="aspect-video w-full rounded-2xl border border-border" />
+            <Card className="gap-3 p-6">
               <Skeleton className="h-6 w-40" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-5/6" />
               <Skeleton className="h-4 w-3/4" />
-            </div>
+            </Card>
           </div>
         ) : null}
 
@@ -214,7 +214,7 @@ export default function LessonPage() {
               )}
             </div>
 
-            <Card className="border-2">
+            <Card>
               <CardHeader>
                 <CardTitle>Sobre esta aula</CardTitle>
               </CardHeader>
@@ -243,7 +243,7 @@ export default function LessonPage() {
                   const isWrong = verifyResult?.answers.find(a => a.publicQuestionId === question.publicId)?.isCorrect === false;
 
                   return (
-                    <Card key={question.publicId} className={`border-2 overflow-hidden transition-all ${isWrong ? 'border-destructive/30' : isCorrect ? 'border-success/30' : ''}`}>
+                    <Card key={question.publicId} className={`overflow-hidden transition-all ${isWrong ? 'border-destructive/30' : isCorrect ? 'border-success/30' : ''}`}>
                       <CardHeader className="bg-muted/30">
                         <CardTitle className="text-lg flex gap-3">
                           <span className="text-primary opacity-50">{qIndex + 1}.</span>

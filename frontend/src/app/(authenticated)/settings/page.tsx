@@ -83,7 +83,7 @@ export default function SettingsPage() {
         <div className="h-16 border-b px-4 flex items-center gap-4">
           <Skeleton className="h-8 w-32" />
           <div className="ml-auto flex items-center gap-3">
-            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-9 w-9 rounded-full border-2 border-primary/20" />
             <Skeleton className="h-8 w-24" />
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function SettingsPage() {
           <Skeleton className="h-5 w-56" />
           <div className="pt-4 space-y-4">
             <Skeleton className="h-6 w-36" />
-            <div className="rounded-xl border bg-card p-6 space-y-4 max-w-sm">
+            <div className="rounded-xl bg-card ring-1 ring-foreground/10 p-6 space-y-4 max-w-sm">
               <Skeleton className="h-5 w-40" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-10 w-full" />

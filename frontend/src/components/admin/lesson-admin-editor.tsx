@@ -152,8 +152,8 @@ export function LessonAdminEditor({
     return (
       <div className="space-y-4">
         <Skeleton className="h-12 w-full max-w-md" />
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full rounded-xl border-2" />
+        <Skeleton className="h-40 w-full rounded-xl border-2" />
       </div>
     );
   }
@@ -198,7 +198,7 @@ export function LessonAdminEditor({
       {lesson?.questions.map((question, qIndex) => {
         const correctAlt = question.alternatives.find((a) => a.isCorrect);
         return (
-          <Card key={question.publicId} className="border-2 overflow-hidden">
+          <Card key={question.publicId} className="overflow-hidden">
             <CardHeader className="bg-muted/30 flex-row items-center justify-between gap-4 space-y-0">
               <CardTitle className="text-base flex gap-2 items-start">
                 <span className="text-primary opacity-60 shrink-0">{qIndex + 1}.</span>
