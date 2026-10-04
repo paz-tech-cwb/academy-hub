@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import { useReducer, useState } from 'react';
+import { useReducer } from 'react';
 import { lessonsApi } from '@/lib/api/lessons';
 import { questionnaireApi } from '@/lib/api/questionnaire';
 import { queryKeys } from '@/lib/query-keys';
@@ -95,7 +95,6 @@ export default function LessonPage() {
   const isAdmin = user?.profile?.role === UserRole.Admin;
 
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('video');
   const [quiz, dispatch] = useReducer(quizReducer, initialQuizState);
   const { selectedAnswers, allAnswersStatus, verifyResult } = quiz;
 
@@ -197,17 +196,8 @@ export default function LessonPage() {
           </div>
         ) : null}
 
-        {!isLoading && <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2 h-12 bg-muted/50 p-1 border">
-            <TabsTrigger value="video" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <PlayCircle className="w-4 h-4 mr-2" /> Aula em Vídeo
-            </TabsTrigger>
-            <TabsTrigger value="quiz" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <ClipboardList className="w-4 h-4 mr-2" /> Questionário
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="video" className="space-y-6">
+        {!isLoading && (
+          <div className="space-y-8">
             <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl border border-border">
               {videoId ? (
                 <iframe
@@ -236,14 +226,11 @@ export default function LessonPage() {
               </CardContent>
             </Card>
 
-            <div className="flex justify-end">
-              <Button onClick={() => setActiveTab('quiz')} size="lg" className="gap-2 px-8 py-6 text-lg rounded-xl">
-                Ir para o Questionário <ClipboardList className="w-5 h-5" />
-              </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="quiz" className="space-y-6">
+            <section className="space-y-6">
+              <div className="flex items-center gap-3 border-t pt-8">
+                <ClipboardList className="w-6 h-6 text-primary" />
+                <h2 className="text-2xl font-bold tracking-tight">Questionário</h2>
+              </div>
             {isAdmin && lesson?.publicId ? (
               <LessonAdminEditor
                 unityName={unityName}
@@ -344,8 +331,9 @@ export default function LessonPage() {
                 <p className="text-muted-foreground">Esta aula ainda não possui um questionário associado.</p>
               </div>
             )}
-          </TabsContent>
-        </Tabs>}
+            </section>
+          </div>
+        )}
       </main>
     </div>
   );
