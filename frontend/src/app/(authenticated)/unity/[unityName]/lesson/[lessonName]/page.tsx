@@ -13,6 +13,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, PlayCircle, ClipboardList, Send, Loader2, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import Link from 'next/link';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -154,26 +162,39 @@ export default function LessonPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 flex-1">
         <header className="mb-6">
+          <Breadcrumb className="mb-4">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink render={<Link href="/" />}>Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink render={<Link href={`/unity/${unityNameParam}`} />}>
+                  {unityNameDisplay}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              {lesson?.title && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{lesson.title}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              )}
+            </BreadcrumbList>
+          </Breadcrumb>
           {isLoading ? (
-            <>
-              <Skeleton className="h-4 w-40 mb-4" />
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <Skeleton className="h-9 w-80" />
-                <Skeleton className="h-7 w-28" />
-              </div>
-            </>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <Skeleton className="h-9 w-80" />
+              <Skeleton className="h-7 w-28" />
+            </div>
           ) : (
-            <>
-              <Link href={`/unity/${unityNameParam}`} className="text-sm hover:underline flex items-center gap-1 mb-4">
-                ← Voltar para {unityNameDisplay}
-              </Link>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1 className="text-3xl font-bold tracking-tight">{lesson?.title}</h1>
-                <Badge variant={lesson?.concluded ? 'success' : 'secondary'} className="px-4 py-1">
-                  {lesson?.concluded ? 'Concluída' : 'Em andamento'}
-                </Badge>
-              </div>
-            </>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h1 className="text-3xl font-bold tracking-tight">{lesson?.title}</h1>
+              <Badge variant={lesson?.concluded ? 'success' : 'secondary'} className="px-4 py-1">
+                {lesson?.concluded ? 'Concluída' : 'Em andamento'}
+              </Badge>
+            </div>
           )}
         </header>
 

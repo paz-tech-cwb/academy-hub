@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, type PaginationState } from '@tanstack/react-table';
+import Link from 'next/link';
 import { ManagedUser, UserRole } from '@/types';
 import { useRequireRole } from '@/hooks/use-require-auth';
 import Navbar from '@/components/layout/navbar';
@@ -10,6 +11,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import {
   Select,
   SelectContent,
@@ -235,6 +244,24 @@ export default function UsersSettingsPage() {
     [editingId, editValues, handleCancel, handleSave, handleEdit, isSaving],
   );
 
+  const breadcrumb = (
+    <Breadcrumb className="mb-4">
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink render={<Link href="/" />}>Home</BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbLink render={<Link href="/settings" />}>Configurações</BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>Gerenciar Usuários</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+
   if (!isReady) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -242,6 +269,7 @@ export default function UsersSettingsPage() {
           <Skeleton className="h-8 w-32" />
         </div>
         <div className="container mx-auto px-4 py-8 space-y-6">
+          {breadcrumb}
           <Skeleton className="h-9 w-72 mb-2" />
           <Skeleton className="h-64 w-full border border-border" />
         </div>
@@ -254,6 +282,7 @@ export default function UsersSettingsPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 flex-1">
         <header className="mb-8">
+          {breadcrumb}
           <h1 className="text-3xl font-bold tracking-tight mb-2">Gerenciar Usuários</h1>
           <p className="text-muted-foreground">Visualize e gerencie usuários da plataforma.</p>
         </header>

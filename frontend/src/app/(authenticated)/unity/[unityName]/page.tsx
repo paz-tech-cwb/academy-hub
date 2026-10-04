@@ -13,6 +13,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, PlayCircle, Award, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -64,15 +72,24 @@ export default function UnityPage() {
       <main className="container mx-auto px-4 py-8 flex-1">
         <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
+            <Breadcrumb className="mb-2">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink render={<Link href="/" />}>Home</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{unityNameDisplay}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
             {isLoading ? (
               <>
-                <Skeleton className="h-4 w-40" />
                 <Skeleton className="h-10 w-72" />
                 <Skeleton className="h-5 w-96" />
               </>
             ) : (
               <>
-                <Link href="/" className="text-sm hover:underline">← Voltar para unidades</Link>
                 <h1 className="text-4xl font-extrabold tracking-tight">{unityNameDisplay}</h1>
                 <p className="text-muted-foreground text-lg max-w-2xl">
                   {unityDetails?.description || 'Explore as aulas desta unidade e complete os desafios.'}

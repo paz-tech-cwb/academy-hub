@@ -22,7 +22,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  ArrowLeft,
   BookOpen,
   ClipboardList,
   GripVertical,
@@ -36,6 +35,14 @@ import Navbar from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { useRequireRole } from '@/hooks/use-require-auth';
 import { unitiesApi } from '@/lib/api/unities';
 import { lessonsApi } from '@/lib/api/lessons';
@@ -278,6 +285,24 @@ export default function ContentSettingsPage() {
     },
   });
 
+  const breadcrumb = (
+    <Breadcrumb className="mb-4">
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink render={<Link href="/" />}>Home</BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbLink render={<Link href="/settings" />}>Configurações</BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>Configuração de conteúdos</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+
   if (!isReady) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -289,6 +314,7 @@ export default function ContentSettingsPage() {
           </div>
         </div>
         <div className="container mx-auto px-4 py-8 space-y-6">
+          {breadcrumb}
           <Skeleton className="h-9 w-72 mb-2" />
           <Skeleton className="h-5 w-96" />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -310,12 +336,7 @@ export default function ContentSettingsPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 flex-1">
         <header className="mb-8">
-          <Link
-            href="/settings"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" /> Configurações
-          </Link>
+          {breadcrumb}
           <h1 className="text-3xl font-bold tracking-tight mb-2">Configuração de conteúdos</h1>
           <p className="text-muted-foreground">
             Crie e organize unidades, aulas, questões e alternativas. Nesta tela não é possível
