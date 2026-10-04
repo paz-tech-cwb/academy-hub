@@ -28,6 +28,7 @@ namespace application.Config
             services.AddScoped<DeleteUnityUseCase>();
             services.AddScoped<CreateLessonUseCase>();
             services.AddScoped<DeleteLessonUseCase>();
+            services.AddScoped<ReorderLessonsUseCase>();
             services.AddScoped<CreateQuestionUseCase>();
             services.AddScoped<DeleteQuestionUseCase>();
             services.AddScoped<CreateAlternativeUseCase>();

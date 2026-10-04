@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { unitiesApi } from '@/lib/api/unities';
 import { lessonsApi } from '@/lib/api/lessons';
@@ -11,15 +11,11 @@ import Navbar from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, PlayCircle, Award, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { CheckCircle2, PlayCircle, Award, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { LessonDialog } from '@/components/admin/lesson-dialog';
-import { ConfirmDialog } from '@/components/admin/confirm-dialog';
-import { useAuth } from '@/contexts/auth-context';
-import { UserRole, Lesson } from '@/types';
 
 export default function UnityPage() {
   const params = useParams();
@@ -28,13 +24,7 @@ export default function UnityPage() {
   const unityNameDisplay = decodeURIComponent(unityNameParam);
 
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const isAdmin = user?.profile?.role === UserRole.Admin;
   const [issuing, setIssuing] = useState(false);
-  const [lessonDialogOpen, setLessonDialogOpen] = useState(false);
-  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
-  const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
 
   const { data: unityDetails, isLoading: unityLoading } = useQuery({
     queryKey: queryKeys.unities.detail(unityName),
@@ -48,30 +38,11 @@ export default function UnityPage() {
     enabled: !!unityName,
   });
 
-  const deleteLessonMutation = useMutation({
-    mutationFn: (publicId: string) => lessonsApi.remove(publicId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.lessons.list(unityName) });
-      toast.success('Aula excluída.');
-      setLessonToDelete(null);
-    },
-    onError: (err) => {
-      toast.error(getApiErrorMessage(err, 'Falha ao excluir a aula.'));
-    },
-  });
-
-  const { data: editingLessonDetail } = useQuery({
-    queryKey: queryKeys.lessons.detail(unityName, editingLesson?.title ?? ''),
-    queryFn: () => lessonsApi.getByName(unityName, editingLesson!.title),
-    enabled: isAdmin && !!editingLesson,
-  });
-
   const issueCertificate = async () => {
     setIssuing(true);
     try {
       await certificatesApi.issue(unityName);
       toast.success('Certificado emitido com sucesso!');
-      queryClient.invalidateQueries({ queryKey: queryKeys.unities.detail(unityName) });
       router.push('/certificates');
     } catch (error) {
       toast.error(
@@ -131,19 +102,7 @@ export default function UnityPage() {
           {isLoading ? (
             <Skeleton className="h-8 w-48 mb-4" />
           ) : (
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold">Cronograma de Aulas</h2>
-              {isAdmin && (
-                <Button
-                  onClick={() => {
-                    setEditingLesson(null);
-                    setLessonDialogOpen(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" /> Nova Aula
-                </Button>
-              )}
-            </div>
+            <h2 className="text-2xl font-bold mb-4">Cronograma de Aulas</h2>
           )}
           {isLoading && !!!lessons &&
             Array.from({ length: 3 }).map((_, i) => (
@@ -193,28 +152,6 @@ export default function UnityPage() {
                     </Button>
                   </div>
                 </Link>
-
-                {isAdmin && (
-                  <div className="flex items-center justify-end gap-2 px-4 sm:px-6 pb-4">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setEditingLesson(lesson);
-                        setLessonDialogOpen(true);
-                      }}
-                    >
-                      <Pencil className="w-4 h-4 mr-2" /> Editar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => setLessonToDelete(lesson)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" /> Excluir
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           ))}
@@ -227,36 +164,6 @@ export default function UnityPage() {
           )}
         </div>
       </main>
-
-      {lessonDialogOpen && !editingLesson && (
-        <LessonDialog
-          open
-          onOpenChange={setLessonDialogOpen}
-          unityName={unityName}
-          unityPublicId={unityDetails?.publicId}
-        />
-      )}
-
-      {lessonDialogOpen && editingLesson && editingLessonDetail && (
-        <LessonDialog
-          open
-          onOpenChange={setLessonDialogOpen}
-          unityName={unityName}
-          unityPublicId={unityDetails?.publicId}
-          lesson={editingLessonDetail}
-        />
-      )}
-
-      <ConfirmDialog
-        open={!!lessonToDelete}
-        onOpenChange={(open) => {
-          if (!open) setLessonToDelete(null);
-        }}
-        title="Excluir aula"
-        description={`Excluir "${lessonToDelete?.title}" também removerá todas as questões, alternativas e respostas relacionadas. Esta ação não pode ser desfeita.`}
-        isLoading={deleteLessonMutation.isPending}
-        onConfirm={() => lessonToDelete && deleteLessonMutation.mutate(lessonToDelete.publicId)}
-      />
     </div>
   );
 }

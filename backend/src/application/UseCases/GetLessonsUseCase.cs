@@ -11,7 +11,9 @@ namespace application.UseCases
             var unity = await unityRepository.GetAsync(u => u.Name == unityName);
             if (unity is null) return new() { Content = [] };
 
-            var dblessons = await lessonRepository.GetListAsync(l => l.UnityId == unity.Id);
+            var dblessons = (await lessonRepository.GetListAsync(l => l.UnityId == unity.Id))
+                .OrderBy(l => l.Sequence)
+                .ToList();
 
             var lessons = new List<LessonResponseDto>();
 

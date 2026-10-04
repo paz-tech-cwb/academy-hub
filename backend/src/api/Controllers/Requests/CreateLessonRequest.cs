@@ -16,9 +16,6 @@ namespace api.Controllers.Requests
         [Description("Descrição da aula")]
         public string? Description { get; set; }
 
-        [Description("Ordem da aula dentro da unidade")]
-        public int Sequence { get; set; }
-
         [Description("URL do vídeo da aula")]
         public string? VideoUrl { get; set; }
     }

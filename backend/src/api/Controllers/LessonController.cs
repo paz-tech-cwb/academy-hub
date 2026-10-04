@@ -15,7 +15,8 @@ namespace api.Controllers
     [Route("api/lesson")]
     [ApiController]
     [Authorize]
-    public class LessonController(GetLessonsUseCase getLessonsUseCase, GetLessonUseCase getLessonUseCase, CreateLessonUseCase createLessonUseCase, ILessonRepository lessonRepository, DeleteLessonUseCase deleteLessonUseCase) : ControllerBase
+    [Tags("Aulas")]
+    public class LessonController(GetLessonsUseCase getLessonsUseCase, GetLessonUseCase getLessonUseCase, CreateLessonUseCase createLessonUseCase, ILessonRepository lessonRepository, DeleteLessonUseCase deleteLessonUseCase, ReorderLessonsUseCase reorderLessonsUseCase) : ControllerBase
     {
         [EndpointSummary("Obter Lista")]
         [EndpointDescription("Retorna uma lista de aulas com base no nome da unidade")]
@@ -52,7 +53,7 @@ namespace api.Controllers
 
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Criar aula")]
-        [EndpointDescription("Cria uma aula dentro de uma unidade existente (referenciada por publicId). Quando a URL do vídeo não é informada, fica vazia.")]
+        [EndpointDescription("Cria uma aula dentro de uma unidade existente (referenciada por publicId). A aula é criada sempre no final da ordem (posição n+1). Quando a URL do vídeo não é informada, fica vazia.")]
         [ProducesResponseType<Lesson>(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -63,7 +64,6 @@ namespace api.Controllers
                 request.UnityPublicId,
                 request.Title,
                 request.Description,
-                request.Sequence,
                 request.VideoUrl);
 
             return StatusCode((int)result.StatusCode, result.Content);
@@ -71,7 +71,7 @@ namespace api.Controllers
 
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Atualizar aula")]
-        [EndpointDescription("Atualiza título, descrição, sequência e vídeo de uma aula existente.")]
+        [EndpointDescription("Atualiza título, descrição e vídeo de uma aula existente. A ordem não é alterada aqui: use o endpoint de reordenação.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -83,7 +83,6 @@ namespace api.Controllers
 
             lesson.Title = request.Title;
             lesson.Description = request.Description;
-            lesson.Sequence = request.Sequence;
             lesson.VideoUrl = string.IsNullOrWhiteSpace(request.VideoUrl) ? "" : request.VideoUrl;
 
             try
@@ -96,6 +95,21 @@ namespace api.Controllers
             }
 
             return NoContent();
+        }
+
+        [Authorize(Roles = "Admin")]
+        [EndpointSummary("Reordenar aulas")]
+        [EndpointDescription("Define a ordem das aulas de uma unidade. Cada item informa o publicId da aula e a nova posição (base 1). Este é o único endpoint que altera a ordem das aulas.")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpPut("reorder")]
+        public async Task<IActionResult> Reorder([FromBody] ReorderLessonsRequest request)
+        {
+            var result = await reorderLessonsUseCase.ExecuteAsync(
+                request.Lessons.Select(l => (l.PublicId, l.Sequence)).ToList());
+
+            return StatusCode((int)result.StatusCode);
         }
 
         [Authorize(Roles = "Admin")]

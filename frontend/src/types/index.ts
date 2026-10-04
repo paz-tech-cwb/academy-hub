@@ -143,15 +143,20 @@ export interface CreateLessonInput {
   unityPublicId: string;
   title: string;
   description?: string | null;
-  sequence: number;
   videoUrl?: string | null;
 }
 
 export interface UpdateLessonInput {
   title: string;
   description?: string | null;
-  sequence: number;
   videoUrl?: string | null;
+}
+
+export interface ReorderLessonsInput {
+  lessons: {
+    publicId: string;
+    sequence: number;
+  }[];
 }
 
 export interface CreateQuestionInput {

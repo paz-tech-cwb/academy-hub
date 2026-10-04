@@ -6,9 +6,7 @@ import { useReducer } from 'react';
 import { lessonsApi } from '@/lib/api/lessons';
 import { questionnaireApi } from '@/lib/api/questionnaire';
 import { queryKeys } from '@/lib/query-keys';
-import { Question, VerifyAnswersResponse, UserRole } from '@/types';
-import { useAuth } from '@/contexts/auth-context';
-import { LessonAdminEditor } from '@/components/admin/lesson-admin-editor';
+import { Question, VerifyAnswersResponse } from '@/types';
 import Navbar from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -89,9 +87,6 @@ export default function LessonPage() {
   const lessonName = lessonNameParam;
 
   const unityNameDisplay = decodeURIComponent(unityNameParam);
-
-  const { user } = useAuth();
-  const isAdmin = user?.profile?.role === UserRole.Admin;
 
   const queryClient = useQueryClient();
   const [quiz, dispatch] = useReducer(quizReducer, initialQuizState);
@@ -230,13 +225,7 @@ export default function LessonPage() {
                 <ClipboardList className="w-6 h-6 text-primary" />
                 <h2 className="text-2xl font-bold tracking-tight">Questionário</h2>
               </div>
-            {isAdmin && lesson?.publicId ? (
-              <LessonAdminEditor
-                unityName={unityName}
-                lessonName={lessonName}
-                lessonPublicId={lesson.publicId}
-              />
-            ) : questions && questions.length > 0 ? (
+            {questions && questions.length > 0 ? (
               <div className="max-w-3xl mx-auto space-y-8 pb-12">
                 {questions.map((question, qIndex) => {
                   const isCorrect = allAnswersStatus[question.publicId];

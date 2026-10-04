@@ -8,7 +8,7 @@ import Navbar from '@/components/layout/navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ListVideo, Search, Users, type LucideIcon } from 'lucide-react';
+import { BookOpenCheck, ListVideo, Search, Users, type LucideIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ImportPlaylistModal from '@/components/settings/import-playlist-modal';
 
@@ -31,6 +31,17 @@ export default function SettingsPage() {
 
   const settingsItems = useMemo<SettingsItem[]>(
     () => [
+      {
+        id: 'manage-content',
+        section: 'Conteúdo',
+        title: 'Configurar conteúdos',
+        description:
+          'Crie e organize unidades, aulas, questões e alternativas em uma única tela.',
+        actionLabel: 'Configurar conteúdos',
+        icon: BookOpenCheck,
+        iconClassName: 'text-primary',
+        action: () => router.push('/settings/content'),
+      },
       {
         id: 'import-playlist',
         section: 'Conteúdo',
@@ -108,8 +119,10 @@ export default function SettingsPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 flex-1">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Configurações de Conteúdos</h1>
-          <p className="text-muted-foreground">Gerencie e importe conteúdos para a plataforma.</p>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Configurações</h1>
+          <p className="text-muted-foreground">
+            Gerencie as configurações gerais da plataforma, como conteúdo, usuários e preferências.
+          </p>
         </header>
 
         <div className="relative max-w-md mb-8">

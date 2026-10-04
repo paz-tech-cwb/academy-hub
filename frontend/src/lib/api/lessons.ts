@@ -4,6 +4,7 @@ import {
   CreateLessonInput,
   Lesson,
   LessonDetail,
+  ReorderLessonsInput,
   UpdateLessonInput,
 } from '@/types';
 
@@ -47,6 +48,15 @@ export const lessonsApi = {
    */
   update: async (publicId: string, payload: UpdateLessonInput) => {
     await api.put(`/api/lesson/${publicId}`, payload);
+  },
+
+  /**
+   * Reordena as aulas de uma unidade (admin).
+   *
+   * @param payload - Lista com o publicId de cada aula e a nova posição (base 1).
+   */
+  reorder: async (payload: ReorderLessonsInput) => {
+    await api.put('/api/lesson/reorder', payload);
   },
 
   /**

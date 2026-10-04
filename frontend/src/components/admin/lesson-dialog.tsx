@@ -35,7 +35,6 @@ const lessonSchema = z.object({
     .min(1, 'Informe o título da aula.')
     .max(100, 'O título deve ter no máximo 100 caracteres.'),
   description: z.string().max(5000, 'A descrição deve ter no máximo 5000 caracteres.'),
-  sequence: z.coerce.number().min(0, 'A sequência não pode ser negativa.'),
   videoUrl: z
     .string()
     .url('Informe uma URL de vídeo válida.')
@@ -71,7 +70,6 @@ export function LessonDialog({
     defaultValues: {
       title: lesson?.title ?? '',
       description: lesson?.description ?? '',
-      sequence: lesson?.sequence ?? 0,
       videoUrl: lesson?.videoUrl ?? '',
     },
   });
@@ -81,7 +79,6 @@ export function LessonDialog({
       const payload = {
         title: values.title,
         description: values.description || null,
-        sequence: values.sequence,
         videoUrl: values.videoUrl || null,
       };
       return isEditing && lesson
@@ -139,34 +136,19 @@ export function LessonDialog({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="sequence"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sequência</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={0} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="videoUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL do vídeo</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://youtu.be/..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="videoUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL do vídeo</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://youtu.be/..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             {error && <p className="text-sm font-medium text-destructive">{error}</p>}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>

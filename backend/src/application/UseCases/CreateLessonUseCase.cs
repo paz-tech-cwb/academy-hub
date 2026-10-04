@@ -9,7 +9,7 @@ namespace application.UseCases
         IUnityRepository unityRepository,
         ILessonRepository lessonRepository)
     {
-        public async Task<UseCaseResult<Lesson>> ExecuteAsync(Guid unityPublicId, string title, string? description, int sequence, string? videoUrl)
+        public async Task<UseCaseResult<Lesson>> ExecuteAsync(Guid unityPublicId, string title, string? description, string? videoUrl)
         {
             var unity = await unityRepository.GetAsync(u => u.PublicId == unityPublicId);
             if (unity is null)
@@ -19,11 +19,13 @@ namespace application.UseCases
             if (titleExists is not null)
                 return new() { StatusCode = HttpStatusCode.BadRequest };
 
+            var existingLessons = await lessonRepository.GetListAsync(l => l.UnityId == unity.Id);
+
             var lesson = new Lesson
             {
                 Title = title,
                 Description = description,
-                Sequence = sequence,
+                Sequence = existingLessons.Count + 1,
                 VideoUrl = string.IsNullOrWhiteSpace(videoUrl) ? "" : videoUrl,
                 UnityId = unity.Id,
                 Unity = unity

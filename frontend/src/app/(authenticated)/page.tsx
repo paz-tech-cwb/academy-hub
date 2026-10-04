@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { unitiesApi } from "@/lib/api/unities";
 import { queryKeys } from "@/lib/query-keys";
-import { getApiErrorMessage } from "@/lib/api/errors";
 import {
   Card,
   CardDescription,
@@ -17,37 +15,12 @@ import Link from "next/link";
 import Navbar from "@/components/layout/navbar";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
-import { BookOpen, Pencil, Plus, Trash2 } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
-import { UserRole, Unity } from "@/types";
-import { UnityDialog } from "@/components/admin/unity-dialog";
-import { ConfirmDialog } from "@/components/admin/confirm-dialog";
-import { toast } from "sonner";
+import { BookOpen } from "lucide-react";
 
 export default function HomePage() {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const isAdmin = user?.profile?.role === UserRole.Admin;
-
-  const [unityDialogOpen, setUnityDialogOpen] = useState(false);
-  const [editingUnity, setEditingUnity] = useState<Unity | null>(null);
-  const [unityToDelete, setUnityToDelete] = useState<Unity | null>(null);
-
   const { data: unities, isLoading } = useQuery({
     queryKey: queryKeys.unities.all,
     queryFn: unitiesApi.list,
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (publicId: string) => unitiesApi.remove(publicId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.unities.all });
-      toast.success("Unidade excluída.");
-      setUnityToDelete(null);
-    },
-    onError: (err) => {
-      toast.error(getApiErrorMessage(err, "Falha ao excluir a unidade."));
-    },
   });
 
   return (
@@ -61,26 +34,14 @@ export default function HomePage() {
               <Skeleton className="h-5 w-56" />
             </>
           ) : (
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight mb-2">
-                  Treinamentos Disponíveis
-                </h1>
-                <p className="text-muted-foreground">
-                  Escolha uma unidade para começar a aprender.
-                </p>
-              </div>
-              {isAdmin && (
-                <Button
-                  onClick={() => {
-                    setEditingUnity(null);
-                    setUnityDialogOpen(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" /> Nova Unidade
-                </Button>
-              )}
-            </div>
+            <>
+              <h1 className="text-3xl font-bold tracking-tight mb-2">
+                Treinamentos Disponíveis
+              </h1>
+              <p className="text-muted-foreground">
+                Escolha uma unidade para começar a aprender.
+              </p>
+            </>
           )}
         </header>
 
@@ -110,31 +71,6 @@ export default function HomePage() {
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-primary/20 to-secondary/20">
                     <BookOpen className="w-12 h-12 text-primary/40" />
-                  </div>
-                )}
-                {isAdmin && (
-                  <div className="absolute top-2 right-2 flex items-center gap-1">
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      className="w-8 h-8"
-                      onClick={() => {
-                        setEditingUnity(unity);
-                        setUnityDialogOpen(true);
-                      }}
-                    >
-                      <Pencil className="w-4 h-4" />
-                      <span className="sr-only">Editar unidade</span>
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="w-8 h-8"
-                      onClick={() => setUnityToDelete(unity)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span className="sr-only">Excluir unidade</span>
-                    </Button>
                   </div>
                 )}
               </div>
@@ -170,27 +106,6 @@ export default function HomePage() {
           </div>
         )}
       </main>
-
-      {unityDialogOpen && (
-        <UnityDialog
-          open
-          onOpenChange={setUnityDialogOpen}
-          unity={editingUnity}
-        />
-      )}
-
-      <ConfirmDialog
-        open={!!unityToDelete}
-        onOpenChange={(open) => {
-          if (!open) setUnityToDelete(null);
-        }}
-        title="Excluir unidade"
-        description={`Excluir "${unityToDelete?.name}" também removerá todas as aulas, questões, alternativas, respostas e certificados relacionados. Esta ação não pode ser desfeita.`}
-        isLoading={deleteMutation.isPending}
-        onConfirm={() =>
-          unityToDelete && deleteMutation.mutate(unityToDelete.publicId)
-        }
-      />
     </div>
   );
 }
