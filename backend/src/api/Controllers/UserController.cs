@@ -20,6 +20,7 @@ namespace api.Controllers
         [EndpointSummary("Registro")]
         [EndpointDescription("Cria um novo usuário.")]
         [ProducesResponseType<string>(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Description = "Quando o username ou a senha são inválidos.")]
         [HttpPost("register")]
         public async Task<ActionResult<string>> Register(RegisterRequest registerDto)
         {
@@ -30,6 +31,7 @@ namespace api.Controllers
         [EndpointSummary("Login")]
         [EndpointDescription("Realiza login na API para obter token JWT.")]
         [ProducesResponseType<LoginResponseDto>(StatusCodes.Status200OK, Description = "Quando o login é realizado com sucesso.")]
+        [ProducesResponseType<LoginResponseDto>(StatusCodes.Status400BadRequest, Description = "Quando o username ou a senha são inválidos.")]
         [ProducesResponseType<LoginResponseDto>(StatusCodes.Status401Unauthorized, Description = "Quando a senha ou usuário estão incorretos.")]
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponseDto>> Login(LoginRequest loginDto)

@@ -92,14 +92,14 @@ insert into users(
     role
 ) values (
     "33e5cabd-e14a-415a-b94d-421bead93a35",
-    "prolud",
-    "$2a$11$DUhfwmZQryBVO42zkE2sWOUFJpyPWhqQbMVDWcUORl7EOSPLv3SQW",
+    "lucasaguiar",
+    "$2a$11$AaHjow/HXXwaP6laCO.c4uyfQ2JPUtR5IzDI4.h61eH0crqtJbfP2",
     1
 ), (
     "3b391393-bb34-49bf-9037-da0f3e60ad17",
     "erielfundador",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
-    1
+    0
 );
 
 insert into unities(public_id, name)

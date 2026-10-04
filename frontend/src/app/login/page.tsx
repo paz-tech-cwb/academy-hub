@@ -15,8 +15,14 @@ import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 
 const loginSchema = z.object({
-  username: z.string().min(3, 'O nome de usuário deve ter pelo menos 3 caracteres'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  username: z
+    .string()
+    .min(4, 'O nome de usuário deve ter pelo menos 4 caracteres')
+    .max(16, 'O nome de usuário deve ter no máximo 16 caracteres'),
+  password: z
+    .string()
+    .min(8, 'A senha deve ter pelo menos 8 caracteres')
+    .max(16, 'A senha deve ter no máximo 16 caracteres'),
 });
 
 export default function LoginPage() {
@@ -70,7 +76,13 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Usuário</FormLabel>
                     <FormControl>
-                      <Input placeholder="seu_usuário" {...field} />
+                      <Input
+                        placeholder="seu_usuário"
+                        {...field}
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

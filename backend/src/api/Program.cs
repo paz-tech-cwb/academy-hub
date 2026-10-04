@@ -5,6 +5,7 @@ using application.Config;
 using api.Middlewares;
 using Microsoft.AspNetCore.HttpOverrides;
 using FluentValidation;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +35,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddJwt(builder.Configuration);
 builder.Services.AddScalar();
+builder.Services.AddFluentValidationAutoValidation();
 
 builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
 {

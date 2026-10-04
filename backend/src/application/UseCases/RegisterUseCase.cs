@@ -10,14 +10,16 @@ namespace application.UseCases
     {
         public async Task<UseCaseResult<string>> ExecuteAsync(string username, string password)
         {
-            var userAlreadyExists = await userRepository.GetAsync(u => u.Username == username) != null;
+            var normalizedUsername = username.ToLower();
+
+            var userAlreadyExists = await userRepository.GetAsync(u => u.Username == normalizedUsername) != null;
 
             if (userAlreadyExists)
                 return Conflict();
             
             await userRepository.InsertAsync(new User()
             {
-                Username = username,
+                Username = normalizedUsername,
                 Password = HashPassword(password),
                 Status = true,
             });

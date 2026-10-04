@@ -101,6 +101,11 @@ This starts MySQL and runs the initialization scripts automatically.
 dotnet run --project src/api/api.csproj
 ```
 
+**3. Drop the database:**
+```bash
+docker compose -f .docker/compose/docker-compose.yaml down -v
+```
+
 The API will be available at:
 - `http://localhost:5165`
 - `https://localhost:7034`

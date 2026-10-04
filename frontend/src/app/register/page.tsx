@@ -14,8 +14,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import Link from 'next/link';
 
 const registerSchema = z.object({
-  username: z.string().min(3, 'O nome de usuário deve ter pelo menos 3 caracteres'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  username: z
+    .string()
+    .min(4, 'O nome de usuário deve ter pelo menos 4 caracteres')
+    .max(16, 'O nome de usuário deve ter no máximo 16 caracteres'),
+  password: z
+    .string()
+    .min(8, 'A senha deve ter pelo menos 8 caracteres')
+    .max(16, 'A senha deve ter no máximo 16 caracteres'),
 });
 
 export default function RegisterPage() {

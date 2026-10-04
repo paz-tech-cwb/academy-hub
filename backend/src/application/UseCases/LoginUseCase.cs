@@ -10,7 +10,9 @@ namespace application.UseCases
     {
         public async Task<UseCaseResult<LoginResponseDto>> ExecuteAsync(string username, string password)
         {
-            var userFromDatabase = await userRepository.GetAsync(u => u.Username == username);
+            var normalizedUsername = username.ToLower();
+
+            var userFromDatabase = await userRepository.GetAsync(u => u.Username == normalizedUsername);
 
             if (userFromDatabase is null) return LoginInvalido();
 
