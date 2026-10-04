@@ -13,7 +13,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
-import { LogOut, BookOpen, Award, Settings2, Menu, Sun, Moon } from 'lucide-react';
+import { LogOut, BookOpen, Award, Settings2, Menu, Sun, Moon, Trophy } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from 'next-themes';
@@ -40,15 +40,6 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-sm font-medium hover:text-primary flex items-center gap-1">
-              <BookOpen className="w-4 h-4" /> Unidades
-            </Link>
-            <Link href="/certificates" className="text-sm font-medium hover:text-primary flex items-center gap-1">
-              <Award className="w-4 h-4" /> Certificados
-            </Link>
-          </div>
-
           {user && (
             <div className="flex items-center gap-4 border-l pl-4">
               {user.profile && (
@@ -86,6 +77,24 @@ export default function Navbar() {
                     </DrawerHeader>
 
                     <div className="flex flex-col gap-1 p-2">
+                      <DrawerClose
+                        nativeButton={false}
+                        render={<Link href="/" className={menuItemClass} />}
+                      >
+                        <BookOpen className="w-4 h-4" /> Unidades
+                      </DrawerClose>
+                      <DrawerClose
+                        nativeButton={false}
+                        render={<Link href="/certificates" className={menuItemClass} />}
+                      >
+                        <Award className="w-4 h-4" /> Certificados
+                      </DrawerClose>
+                      <DrawerClose
+                        nativeButton={false}
+                        render={<Link href="/leaderboard" className={menuItemClass} />}
+                      >
+                        <Trophy className="w-4 h-4" /> Leaderboard
+                      </DrawerClose>
                       {isAdmin && (
                         <DrawerClose
                           nativeButton={false}

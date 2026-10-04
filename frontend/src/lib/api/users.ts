@@ -1,6 +1,7 @@
 import api from '@/lib/axios';
 import {
   LoginResponse,
+  PaginatedLeaderboard,
   PaginatedUsers,
   UpdateUserInput,
   UserProfile,
@@ -18,6 +19,11 @@ export interface ListUsersParams {
   search?: string;
   status?: boolean;
   role?: UserRole;
+}
+
+export interface ListLeaderboardParams {
+  page?: number;
+  pageSize?: number;
 }
 
 export const usersApi = {
@@ -65,6 +71,19 @@ export const usersApi = {
    */
   listUsers: async (params: ListUsersParams = {}) => {
     const { data } = await api.get<PaginatedUsers>('/api/user', {
+      params,
+    });
+    return data;
+  },
+
+  /**
+   * Busca o ranking global de usuários por XP.
+   *
+   * @param params - Página e tamanho da página.
+   * @returns Lista paginada com a posição global de cada usuário.
+   */
+  getLeaderboard: async (params: ListLeaderboardParams = {}) => {
+    const { data } = await api.get<PaginatedLeaderboard>('/api/user/leaderboard', {
       params,
     });
     return data;

@@ -60,6 +60,20 @@ namespace api.Controllers
             });
         }
 
+        [Authorize]
+        [EndpointSummary("Obter leaderboard")]
+        [EndpointDescription("Retorna o ranking de usuários por XP, do maior para o menor, paginado. A posição é global, então a segunda página começa na 11ª posição. Disponível para qualquer usuário autenticado.")]
+        [ProducesResponseType<PaginatedResult<LeaderboardResponse>>(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized, Description = "Quando o usuário não está autenticado.")]
+        [HttpGet("leaderboard")]
+        public async Task<ActionResult<PaginatedResult<LeaderboardResponse>>> GetLeaderboard(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var result = await userService.GetLeaderboardAsync(page, pageSize);
+            return Ok(result);
+        }
+
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Listar usuários")]
         [EndpointDescription("Busca usuários com paginação e filtros opcionais por username, status e role.")]

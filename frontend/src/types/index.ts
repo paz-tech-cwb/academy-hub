@@ -42,6 +42,21 @@ export interface UpdateUserInput {
   role?: UserRole;
 }
 
+export interface LeaderboardEntry {
+  position: number;
+  publicId: string;
+  username: string;
+  experience: number;
+}
+
+export interface PaginatedLeaderboard {
+  items: LeaderboardEntry[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export interface Unity {
   publicId: string;
   name: string;

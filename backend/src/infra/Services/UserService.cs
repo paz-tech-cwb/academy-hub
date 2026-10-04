@@ -56,6 +56,47 @@ namespace infra.Services
             };
         }
 
+        public async Task<PaginatedResult<LeaderboardResponse>> GetLeaderboardAsync(int page, int pageSize)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 100) pageSize = 100;
+
+            var users = await userRepository.GetListAsync(u => true);
+
+            // Username como desempate para que a paginação não repita nem pule
+            // usuários quando vários têm o mesmo XP.
+            var ranked = users
+                .OrderByDescending(u => u.Experience)
+                .ThenBy(u => u.Username)
+                .ToList();
+
+            var totalCount = ranked.Count;
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            var offset = (page - 1) * pageSize;
+
+            var items = ranked
+                .Skip(offset)
+                .Take(pageSize)
+                .Select((user, index) => new LeaderboardResponse
+                {
+                    Position = offset + index + 1,
+                    PublicId = user.PublicId,
+                    Username = user.Username,
+                    Experience = user.Experience
+                })
+                .ToList();
+
+            return new PaginatedResult<LeaderboardResponse>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                TotalPages = totalPages
+            };
+        }
+
         public async Task<bool> DeleteUserAsync(Guid publicId)
         {
             var user = await GetUserAsync(publicId);

@@ -100,7 +100,32 @@ insert into users(
     "erielfundador",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
     0
+), (
+    "d5b210fa-2e5f-4e4f-899f-4f609820a4b4",
+    "jackson",
+    "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
+    0
+), (
+    "4983b8b2-6ae3-45aa-ba25-4c2347d80058",
+    "kaucartelli",
+    "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
+    0
+), (
+    "15fe54d1-c50b-4051-8fc5-d1144f92217e",
+    "wollimendes",
+    "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
+    0
+), (
+    "54d258ba-7ce5-42e0-9b6d-57756bad1555",
+    "danielsouza",
+    "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
+    0
 );
+
+
+
+
+
 
 insert into unities(public_id, name)
 values(
