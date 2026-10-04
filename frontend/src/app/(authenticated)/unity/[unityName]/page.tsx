@@ -101,7 +101,7 @@ export default function UnityPage() {
               </>
             ) : (
               <>
-                <Link href="/" className="text-sm text-primary hover:underline">← Voltar para unidades</Link>
+                <Link href="/" className="text-sm hover:underline">← Voltar para unidades</Link>
                 <h1 className="text-4xl font-extrabold tracking-tight">{unityNameDisplay}</h1>
                 <p className="text-muted-foreground text-lg max-w-2xl">
                   {unityDetails?.description || 'Explore as aulas desta unidade e complete os desafios.'}

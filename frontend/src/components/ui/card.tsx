@@ -10,7 +10,7 @@ const cardVariants = cva(
       variant: {
         default: "",
         interactive:
-          "border-2 border-transparent hover:border-primary/50 transition-all hover:shadow-lg",
+          "border-2 border-transparent hover:border-primary/20 transition-all hover:shadow-lg",
       },
     },
     defaultVariants: {

@@ -13,9 +13,14 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
-import { LogOut, BookOpen, Award, Settings2, Menu } from 'lucide-react';
+import { LogOut, BookOpen, Award, Settings2, Menu, Sun, Moon } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
+import { useTheme } from 'next-themes';
+import { useSyncExternalStore } from 'react';
 import { UserRole } from '@/types';
+
+const emptySubscribe = () => () => {};
 
 const menuItemClass =
   'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground';
@@ -23,11 +28,14 @@ const menuItemClass =
 export default function Navbar() {
   const { user, logout } = useAuth();
   const isAdmin = user?.profile?.role === UserRole.Admin;
+  const { resolvedTheme, setTheme } = useTheme();
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const isDark = mounted && resolvedTheme === 'dark';
 
   return (
     <nav className="border-b bg-card text-card-foreground sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold tracking-tight text-primary">
+        <Link href="/" className="text-xl font-bold tracking-tight">
           Academy Hub
         </Link>
 
@@ -86,6 +94,22 @@ export default function Navbar() {
                           <Settings2 className="w-4 h-4" /> Configurações
                         </DrawerClose>
                       )}
+                      <div className="flex items-center justify-between gap-3 rounded-md px-3 py-2.5">
+                        <span className="flex items-center gap-3 text-sm font-medium">
+                          {isDark ? (
+                            <Moon className="w-4 h-4" />
+                          ) : (
+                            <Sun className="w-4 h-4" />
+                          )}
+                          {isDark ? 'Modo escuro' : 'Modo claro'}
+                        </span>
+                        <Switch
+                          checked={isDark}
+                          onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                          aria-label="Alternar tema"
+                          disabled={!mounted}
+                        />
+                      </div>
                       <DrawerClose
                         render={
                           <Button

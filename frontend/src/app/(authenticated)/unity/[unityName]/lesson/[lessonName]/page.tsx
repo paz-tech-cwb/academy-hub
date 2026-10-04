@@ -169,7 +169,7 @@ export default function LessonPage() {
             </>
           ) : (
             <>
-              <Link href={`/unity/${unityNameParam}`} className="text-sm text-primary hover:underline flex items-center gap-1 mb-4">
+              <Link href={`/unity/${unityNameParam}`} className="text-sm hover:underline flex items-center gap-1 mb-4">
                 ← Voltar para {unityNameDisplay}
               </Link>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
