@@ -262,21 +262,6 @@ export default function UsersSettingsPage() {
     </Breadcrumb>
   );
 
-  if (!isReady) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <div className="h-16 border-b px-4 flex items-center gap-4">
-          <Skeleton className="h-8 w-32" />
-        </div>
-        <div className="container mx-auto px-4 py-8 space-y-6">
-          {breadcrumb}
-          <Skeleton className="h-9 w-72 mb-2" />
-          <Skeleton className="h-64 w-full border border-border" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
