@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const TOKEN_KEY = 'academy-hub-token';
-const USERNAME_KEY = 'academy-hub-username';
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -30,7 +29,6 @@ api.interceptors.response.use(
         window.location.pathname === '/register';
       if (!onAuthRoute) {
         localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USERNAME_KEY);
         window.location.href = '/login';
       }
     }

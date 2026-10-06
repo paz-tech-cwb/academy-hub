@@ -4,7 +4,6 @@ import {
   PaginatedLeaderboard,
   PaginatedUsers,
   UpdateUserInput,
-  UserProfile,
   UserRole,
 } from '@/types';
 
@@ -49,17 +48,6 @@ export const usersApi = {
    */
   register: async (credentials: AuthCredentials) => {
     const { data } = await api.post<string>('/api/user/register', credentials);
-    return data;
-  },
-
-  /**
-   * Busca o perfil completo de um usuário.
-   *
-   * @param username - Nome de usuário a consultar.
-   * @returns Perfil com nível, XP, foto e role.
-   */
-  getProfile: async (username: string) => {
-    const { data } = await api.get<UserProfile>(`/api/user/${username}`);
     return data;
   },
 

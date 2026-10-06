@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Drawer,
   DrawerClose,
@@ -14,7 +14,6 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { LogOut, BookOpen, Award, Settings2, Menu, Sun, Moon, Trophy } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore } from 'react';
@@ -27,7 +26,7 @@ const menuItemClass =
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const isAdmin = user?.profile?.role === UserRole.Admin;
+  const isAdmin = user?.role === UserRole.Admin;
   const { resolvedTheme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const isDark = mounted && resolvedTheme === 'dark';
@@ -42,22 +41,9 @@ export default function Navbar() {
         <div className="flex items-center gap-6">
           {user && (
             <div className="flex items-center gap-4 border-l pl-4">
-              {user.profile && (
-                <div className="hidden lg:flex flex-col items-end gap-1">
-                  <span className="text-xs font-semibold">Nível {user.profile.level}</span>
-                  <Progress value={user.profile.levelPercentage} className="w-24 h-2" />
-                </div>
-              )}
-
               <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold leading-none">{user.username}</p>
-                  {user.profile && (
-                    <p className="text-xs text-muted-foreground">{user.profile.experience} XP</p>
-                  )}
-                </div>
+                <p className="text-sm font-bold leading-none hidden sm:block">{user.username}</p>
                 <Avatar className="h-9 w-9 border-2 border-primary/20">
-                  <AvatarImage src={user.profile?.profilePic} />
                   <AvatarFallback className="bg-primary/10 text-primary uppercase">
                     {user.username.substring(0, 2)}
                   </AvatarFallback>
@@ -70,10 +56,7 @@ export default function Navbar() {
                   <DrawerContent className="w-80 max-w-[85vw]">
                     <DrawerHeader className="border-b pb-4">
                       <DrawerTitle>Menu</DrawerTitle>
-                      <DrawerDescription>
-                        {user.username}
-                        {user.profile ? ` · Nível ${user.profile.level}` : ''}
-                      </DrawerDescription>
+                      <DrawerDescription>{user.username}</DrawerDescription>
                     </DrawerHeader>
 
                     <div className="flex flex-col gap-1 p-2">

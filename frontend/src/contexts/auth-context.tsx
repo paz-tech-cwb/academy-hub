@@ -2,18 +2,21 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { usersApi } from '@/lib/api/users';
-import { UserProfile } from '@/types';
+import { decodeToken } from '@/lib/jwt';
+import { UserRole } from '@/types';
+
+const TOKEN_KEY = 'academy-hub-token';
 
 export interface AuthUser {
   username: string;
-  profile: UserProfile | null;
+  publicId: string;
+  role: UserRole;
 }
 
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
-  login: (token: string, username: string) => Promise<void>;
+  login: (token: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -24,41 +27,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const fetchUserProfile = async (username: string) => {
-    try {
-      const profile = await usersApi.getProfile(username);
-      setUser({ username, profile });
-    } catch {
-      setUser({ username, profile: null });
-    }
-  };
-
   useEffect(() => {
-    const token = localStorage.getItem('academy-hub-token');
-    const username = localStorage.getItem('academy-hub-username');
+    const token = localStorage.getItem(TOKEN_KEY);
 
-    if (token && username) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- hidratação síncrona do estado a partir do localStorage externo
-      setUser({ username, profile: null });
-      fetchUserProfile(username).finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+    if (token) {
+      const decoded = decodeToken(token);
+      if (decoded) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hidratação síncrona do estado a partir do localStorage externo
+        setUser(decoded);
+      } else {
+        localStorage.removeItem(TOKEN_KEY);
+      }
     }
+    setLoading(false);
   }, []);
 
-  const login = async (token: string, username: string) => {
-    localStorage.setItem('academy-hub-token', token);
-    localStorage.setItem('academy-hub-username', username);
+  const login = async (token: string) => {
+    const decoded = decodeToken(token);
+    if (!decoded) {
+      throw new Error('Token de acesso inválido');
+    }
 
-    setUser({ username, profile: null });
-    fetchUserProfile(username).catch(() => {});
+    localStorage.setItem(TOKEN_KEY, token);
+    setUser(decoded);
 
     router.push('/');
   };
 
   const logout = () => {
-    localStorage.removeItem('academy-hub-token');
-    localStorage.removeItem('academy-hub-username');
+    localStorage.removeItem(TOKEN_KEY);
     setUser(null);
     router.push('/login');
   };

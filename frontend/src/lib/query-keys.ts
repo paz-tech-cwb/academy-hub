@@ -7,10 +7,6 @@
  * de tipo nos hooks `useQuery`/`useMutation`.
  */
 export const queryKeys = {
-  user: {
-    /** Chave do perfil de um usuário específico. */
-    profile: (username: string) => ['user', 'profile', username] as const,
-  },
   leaderboard: {
     /** Chave de uma página do ranking de XP. */
     list: (page: number, pageSize: number) => ['leaderboard', page, pageSize] as const,

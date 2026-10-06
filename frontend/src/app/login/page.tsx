@@ -43,10 +43,10 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const { accessToken, isLogged, message, username } = await usersApi.login(values);
+      const { accessToken, isLogged, message } = await usersApi.login(values);
 
       if (isLogged) {
-        await login(accessToken, username);
+        await login(accessToken);
       } else {
         setError(message || 'Falha no login');
       }
