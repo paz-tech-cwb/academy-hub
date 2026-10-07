@@ -306,17 +306,16 @@ export default function ContentSettingsPage() {
   if (!isReady) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
-        <div className="h-16 border-b px-4 flex items-center gap-4">
-          <Skeleton className="h-8 w-32" />
-          <div className="ml-auto flex items-center gap-3">
-            <Skeleton className="h-9 w-9 rounded-full border-2 border-primary/20" />
-            <Skeleton className="h-8 w-24" />
-          </div>
-        </div>
-        <div className="container mx-auto px-4 py-8 space-y-6">
-          {breadcrumb}
-          <Skeleton className="h-9 w-72 mb-2" />
-          <Skeleton className="h-5 w-96" />
+        <Navbar />
+        <main className="container mx-auto px-4 py-8 flex-1">
+          <header className="mb-8">
+            {breadcrumb}
+            <h1 className="text-3xl font-bold tracking-tight mb-2">Configuração de conteúdos</h1>
+            <p className="text-muted-foreground">
+              Crie e organize unidades, aulas, questões e alternativas. Nesta tela não é possível
+              assistir às aulas nem responder questionários.
+            </p>
+          </header>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-4 space-y-6">
               <Skeleton className="h-64 w-full rounded-xl bg-card ring-1 ring-foreground/10" />
@@ -326,7 +325,7 @@ export default function ContentSettingsPage() {
               <Skeleton className="h-96 w-full rounded-xl bg-card ring-1 ring-foreground/10" />
             </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }

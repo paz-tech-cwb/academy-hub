@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BookOpenCheck, ListVideo, Search, Users, type LucideIcon } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -114,26 +113,16 @@ export default function SettingsPage() {
   if (!isReady) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
-        <div className="h-16 border-b px-4 flex items-center gap-4">
-          <Skeleton className="h-8 w-32" />
-          <div className="ml-auto flex items-center gap-3">
-            <Skeleton className="h-9 w-9 rounded-full border-2 border-primary/20" />
-            <Skeleton className="h-8 w-24" />
-          </div>
-        </div>
-        <div className="container mx-auto px-4 py-8 space-y-6">
-          {breadcrumb}
-          <Skeleton className="h-9 w-72 mb-2" />
-          <Skeleton className="h-5 w-56" />
-          <div className="pt-4 space-y-4">
-            <Skeleton className="h-6 w-36" />
-            <div className="rounded-xl bg-card ring-1 ring-foreground/10 p-6 space-y-4 max-w-sm">
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          </div>
-        </div>
+        <Navbar />
+        <main className="container mx-auto px-4 py-8 flex-1">
+          <header className="mb-8">
+            {breadcrumb}
+            <h1 className="text-3xl font-bold tracking-tight mb-2">Configurações</h1>
+            <p className="text-muted-foreground">
+              Gerencie as configurações gerais da plataforma, como conteúdo, usuários e preferências.
+            </p>
+          </header>
+        </main>
       </div>
     );
   }

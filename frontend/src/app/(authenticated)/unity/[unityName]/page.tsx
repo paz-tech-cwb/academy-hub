@@ -11,7 +11,7 @@ import Navbar from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, PlayCircle, Award, Loader2 } from 'lucide-react';
+import { CheckCircle2, PlayCircle, Award } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Breadcrumb,
@@ -64,8 +64,6 @@ export default function UnityPage() {
     }
   };
 
-  const isLoading = unityLoading || lessonsLoading;
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -83,18 +81,13 @@ export default function UnityPage() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-            {isLoading ? (
-              <>
-                <Skeleton className="h-10 w-72" />
-                <Skeleton className="h-5 w-96" />
-              </>
+            <h1 className="text-4xl font-extrabold tracking-tight">{unityNameDisplay}</h1>
+            {unityLoading && !unityDetails ? (
+              <Skeleton className="h-7 w-96 max-w-full" />
             ) : (
-              <>
-                <h1 className="text-4xl font-extrabold tracking-tight">{unityNameDisplay}</h1>
-                <p className="text-muted-foreground text-lg max-w-2xl">
-                  {unityDetails?.description || 'Explore as aulas desta unidade e complete os desafios.'}
-                </p>
-              </>
+              <p className="text-muted-foreground text-lg max-w-2xl">
+                {unityDetails?.description || 'Explore as aulas desta unidade e complete os desafios.'}
+              </p>
             )}
           </div>
 
@@ -116,12 +109,8 @@ export default function UnityPage() {
         </header>
 
         <div className="grid grid-cols-1 gap-4">
-          {isLoading ? (
-            <Skeleton className="h-8 w-48 mb-4" />
-          ) : (
-            <h2 className="text-2xl font-bold mb-4">Cronograma de Aulas</h2>
-          )}
-          {isLoading && !!!lessons &&
+          <h2 className="text-2xl font-bold mb-4">Cronograma de Aulas</h2>
+          {lessonsLoading && !lessons &&
             Array.from({ length: 3 }).map((_, i) => (
               <Card key={i} variant="interactive">
                 <CardContent className="flex items-center p-4 sm:p-6 gap-4 sm:gap-6 group">
@@ -175,8 +164,8 @@ export default function UnityPage() {
 
           {lessons?.length === 0 && (
             <div className="text-center py-12 bg-muted/20 rounded-xl border-2 border-dashed">
-              <Loader2 className="w-12 h-12 mx-auto text-muted-foreground/30 animate-spin mb-4" />
-              <p className="text-muted-foreground">Carregando aulas ou nenhuma aula disponível.</p>
+              <PlayCircle className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
+              <p className="text-muted-foreground">Nenhuma aula disponível nesta unidade.</p>
             </div>
           )}
         </div>

@@ -24,21 +24,12 @@ export default function CertificatesPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 flex-1">
         <header className="mb-8">
-          {isLoading ? (
-            <>
-              <Skeleton className="h-9 w-56 mb-2" />
-              <Skeleton className="h-5 w-72" />
-            </>
-          ) : (
-            <>
-              <h1 className="text-3xl font-bold tracking-tight mb-2">Meus Certificados</h1>
-              <p className="text-muted-foreground">Aqui você encontra todas as suas conquistas no Academy Hub.</p>
-            </>
-          )}
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Meus Certificados</h1>
+          <p className="text-muted-foreground">Aqui você encontra todas as suas conquistas no Academy Hub.</p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading &&
+          {isLoading && !certificates &&
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="rounded-xl bg-card ring-1 ring-foreground/10 p-6 space-y-4">
                 <Skeleton className="h-6 w-3/4" />

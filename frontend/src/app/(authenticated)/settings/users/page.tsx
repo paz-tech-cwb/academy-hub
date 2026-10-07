@@ -9,7 +9,6 @@ import { useRequireRole } from '@/hooks/use-require-auth';
 import Navbar from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import {
   Breadcrumb,

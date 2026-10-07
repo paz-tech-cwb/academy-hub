@@ -28,25 +28,16 @@ export default function HomePage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 flex-1">
         <header className="mb-8">
-          {isLoading ? (
-            <>
-              <Skeleton className="h-9 w-72 mb-2" />
-              <Skeleton className="h-5 w-56" />
-            </>
-          ) : (
-            <>
-              <h1 className="text-3xl font-bold tracking-tight mb-2">
-                Treinamentos Disponíveis
-              </h1>
-              <p className="text-muted-foreground">
-                Escolha uma unidade para começar a aprender.
-              </p>
-            </>
-          )}
+          <h1 className="text-3xl font-bold tracking-tight mb-2">
+            Treinamentos Disponíveis
+          </h1>
+          <p className="text-muted-foreground">
+            Escolha uma unidade para começar a aprender.
+          </p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading &&
+          {isLoading && !unities &&
             Array.from({ length: 6 }).map((_, i) => (
               <Card key={i} variant="interactive" className="group">
                 <Skeleton className="h-49 w-full rounded-none" />

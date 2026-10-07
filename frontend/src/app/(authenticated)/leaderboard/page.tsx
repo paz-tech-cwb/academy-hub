@@ -50,28 +50,8 @@ export default function LeaderboardPage() {
   const entries = data?.items ?? [];
   const totalPages = data?.totalPages ?? 0;
   const totalCount = data?.totalCount ?? 0;
-  const isEmpty = !isLoading && entries.length === 0;
-
-  if (!isReady) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <div className="h-16 border-b px-4 flex items-center gap-4">
-          <Skeleton className="h-8 w-32" />
-        </div>
-        <div className="container mx-auto px-4 py-8 space-y-6">
-          <Skeleton className="h-9 w-56" />
-          <Skeleton className="h-5 w-80" />
-          <div className="overflow-hidden rounded-md border">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="border-b p-4">
-                <Skeleton className="h-6 w-full" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const isPending = !isReady || isLoading;
+  const isEmpty = !isPending && entries.length === 0;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -97,7 +77,7 @@ export default function LeaderboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {isPending ? (
                 Array.from({ length: PAGE_SIZE }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell>
@@ -148,7 +128,7 @@ export default function LeaderboardPage() {
               variant="outline"
               size="sm"
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              disabled={isLoading || isEmpty || page <= 1}
+              disabled={isPending || isEmpty || page <= 1}
             >
               <ChevronLeft className="h-4 w-4" />
               Anterior
@@ -157,7 +137,7 @@ export default function LeaderboardPage() {
               variant="outline"
               size="sm"
               onClick={() => setPage((prev) => prev + 1)}
-              disabled={isLoading || isEmpty || page >= totalPages}
+              disabled={isPending || isEmpty || page >= totalPages}
             >
               Próxima
               <ChevronRight className="h-4 w-4" />

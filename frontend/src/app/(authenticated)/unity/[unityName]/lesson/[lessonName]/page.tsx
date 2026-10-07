@@ -95,6 +95,7 @@ export default function LessonPage() {
   const lessonName = lessonNameParam;
 
   const unityNameDisplay = decodeURIComponent(unityNameParam);
+  const lessonNameDisplay = decodeURIComponent(lessonNameParam);
 
   const queryClient = useQueryClient();
   const [quiz, dispatch] = useReducer(quizReducer, initialQuizState);
@@ -152,8 +153,6 @@ export default function LessonPage() {
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  const isLoading = lessonLoading || questionsLoading;
-
   const videoId = getYouTubeId(lesson?.videoUrl || null);
   const lessonComplete = isLessonComplete(questions, allAnswersStatus);
 
@@ -173,176 +172,179 @@ export default function LessonPage() {
                   {unityNameDisplay}
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              {lesson?.title && (
-                <>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>{lesson.title}</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </>
-              )}
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{lessonNameDisplay}</BreadcrumbPage>
+              </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          {isLoading ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <Skeleton className="h-9 w-80" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h1 className="text-3xl font-bold tracking-tight">{lessonNameDisplay}</h1>
+            {lessonLoading && !lesson ? (
               <Skeleton className="h-7 w-28" />
-            </div>
-          ) : (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h1 className="text-3xl font-bold tracking-tight">{lesson?.title}</h1>
+            ) : (
               <Badge variant={lesson?.concluded ? 'success' : 'secondary'} className="px-4 py-1">
                 {lesson?.concluded ? 'Concluída' : 'Em andamento'}
               </Badge>
-            </div>
-          )}
+            )}
+          </div>
         </header>
 
-        {isLoading ? (
-          <div className="space-y-6">
-            <Skeleton className="h-12 w-full max-w-md" />
-            <Skeleton className="aspect-video w-full rounded-2xl border border-border" />
-            <Card className="gap-3 p-6">
-              <Skeleton className="h-6 w-40" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-5/6" />
-              <Skeleton className="h-4 w-3/4" />
-            </Card>
+        <div className="space-y-8">
+          <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl border border-border">
+            {lessonLoading && !lesson ? (
+              <Skeleton className="w-full h-full rounded-none" />
+            ) : videoId ? (
+              <iframe
+                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+                title={lesson?.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-4">
+                <PlayCircle className="w-16 h-16 opacity-20" />
+                <p>Vídeo não disponível para esta aula.</p>
+              </div>
+            )}
           </div>
-        ) : null}
 
-        {!isLoading && (
-          <div className="space-y-8">
-            <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl border border-border">
-              {videoId ? (
-                <iframe
-                  className="w-full h-full"
-                  src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
-                  title={lesson?.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-4">
-                  <PlayCircle className="w-16 h-16 opacity-20" />
-                  <p>Vídeo não disponível para esta aula.</p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Sobre esta aula</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {lessonLoading && !lesson ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                  <Skeleton className="h-4 w-3/4" />
                 </div>
-              )}
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Sobre esta aula</CardTitle>
-              </CardHeader>
-              <CardContent>
+              ) : (
                 <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                   {lesson?.description || 'Nenhuma descrição detalhada disponível.'}
                 </p>
-              </CardContent>
-            </Card>
+              )}
+            </CardContent>
+          </Card>
 
-            <section className="space-y-6">
-              <div className="flex items-center gap-3 border-t pt-8">
-                <ClipboardList className="w-6 h-6 text-primary" />
-                <h2 className="text-2xl font-bold tracking-tight">Questionário</h2>
-              </div>
-            {questions && questions.length > 0 ? (
-              <div className="max-w-3xl mx-auto space-y-8 pb-12">
-                {questions.map((question, qIndex) => {
-                  const isCorrect = allAnswersStatus[question.publicId];
-                  const isWrong = verifyResult?.answers.find(a => a.publicQuestionId === question.publicId)?.isCorrect === false;
+          <section className="space-y-6">
+            <div className="flex items-center gap-3 border-t pt-8">
+              <ClipboardList className="w-6 h-6 text-primary" />
+              <h2 className="text-2xl font-bold tracking-tight">Questionário</h2>
+            </div>
+          {questionsLoading && !questions ? (
+            <div className="max-w-3xl mx-auto space-y-8 pb-12">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <CardHeader className="bg-muted/30">
+                    <Skeleton className="h-6 w-3/4" />
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-3">
+                    {Array.from({ length: 4 }).map((_, j) => (
+                      <Skeleton key={j} className="h-14 w-full rounded-lg" />
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : questions && questions.length > 0 ? (
+            <div className="max-w-3xl mx-auto space-y-8 pb-12">
+              {questions.map((question, qIndex) => {
+                const isCorrect = allAnswersStatus[question.publicId];
+                const isWrong = verifyResult?.answers.find(a => a.publicQuestionId === question.publicId)?.isCorrect === false;
 
-                  return (
-                    <Card key={question.publicId} className={`overflow-hidden transition-all ${isWrong ? 'border-destructive/30' : isCorrect ? 'border-success/30' : ''}`}>
-                      <CardHeader className="bg-muted/30">
-                        <CardTitle className="text-lg flex gap-3">
-                          <span className="text-primary opacity-50">{qIndex + 1}.</span>
-                          {question.statement}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-6">
-                        <RadioGroup
-                          onValueChange={(val) => handleAnswerSelect(question.publicId, val)}
-                          value={selectedAnswers[question.publicId] || ''}
-                          className="space-y-3"
-                          disabled={isCorrect}
-                        >
-                          {question.alternatives.map((alt) => (
-                            <div
-                              key={alt.publicId}
-                              className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors ${selectedAnswers[question.publicId] === alt.publicId ? 'border-primary bg-primary/5' : ''} ${isCorrect ? 'opacity-80' : ''}`}
-                              onClick={() => handleAnswerSelect(question.publicId, alt.publicId)}
-                            >
-                              <RadioGroupItem value={alt.publicId} id={alt.publicId} />
-                              <Label htmlFor={alt.publicId} className="flex-1 cursor-pointer font-medium leading-relaxed">
-                                {alt.text}
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-
-                {verifyResult && (
-                  <Card className={`border-2 ${lessonComplete ? 'bg-success/5 border-success/20' : 'bg-destructive/5 border-destructive/20'}`}>
-                    <CardContent className="p-6 flex items-start gap-4">
-                      {lessonComplete ? (
-                        <CheckCircle2 className="w-8 h-8 text-success shrink-0" />
-                      ) : (
-                        <AlertCircle className="w-8 h-8 text-destructive shrink-0" />
-                      )}
-                      <div>
-                        <h4 className="text-xl font-bold mb-1">
-                          {lessonComplete ? 'Excelente!' : 'Ainda não foi dessa vez'}
-                        </h4>
-                        <p className="text-muted-foreground">
-                          {verifyResult.message || (lessonComplete ? 'Você acertou todas as questões desta aula!' : 'Algumas respostas estão incorretas. Tente novamente.')}
-                        </p>
-                        {verifyResult.currentPointsWeight > 0 && (
-                          <p className="mt-2 font-bold text-primary">+{verifyResult.currentPointsWeight} XP</p>
-                        )}
-                        {verifyResult.wasUnityCorrectlyAnswered && (
-                          <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
-                            <p className="font-semibold text-primary">Parabéns! Você concluiu todas as lições desta unidade!</p>
+                return (
+                  <Card key={question.publicId} className={`overflow-hidden transition-all ${isWrong ? 'border-destructive/30' : isCorrect ? 'border-success/30' : ''}`}>
+                    <CardHeader className="bg-muted/30">
+                      <CardTitle className="text-lg flex gap-3">
+                        <span className="text-primary opacity-50">{qIndex + 1}.</span>
+                        {question.statement}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <RadioGroup
+                        onValueChange={(val) => handleAnswerSelect(question.publicId, val)}
+                        value={selectedAnswers[question.publicId] || ''}
+                        className="space-y-3"
+                        disabled={isCorrect}
+                      >
+                        {question.alternatives.map((alt) => (
+                          <div
+                            key={alt.publicId}
+                            className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors ${selectedAnswers[question.publicId] === alt.publicId ? 'border-primary bg-primary/5' : ''} ${isCorrect ? 'opacity-80' : ''}`}
+                            onClick={() => handleAnswerSelect(question.publicId, alt.publicId)}
+                          >
+                            <RadioGroupItem value={alt.publicId} id={alt.publicId} />
+                            <Label htmlFor={alt.publicId} className="flex-1 cursor-pointer font-medium leading-relaxed">
+                              {alt.text}
+                            </Label>
                           </div>
-                        )}
-                        {lessonComplete && (
-                          <Button asChild className="mt-4" variant="outline">
-                            <Link href={`/unity/${unityNameParam}`}>Voltar para Unidade</Link>
-                          </Button>
-                        )}
-                      </div>
+                        ))}
+                      </RadioGroup>
                     </CardContent>
                   </Card>
-                )}
+                );
+              })}
 
-                <div className="flex justify-center pt-4">
-                  <Button
-                    onClick={() => verifyMutation.mutate()}
-                    size="lg"
-                    className="w-full sm:w-64 h-14 text-lg rounded-xl shadow-xl shadow-primary/20"
-                    disabled={verifyMutation.isPending || Object.keys(selectedAnswers).filter(id => !allAnswersStatus[id]).length === 0}
-                  >
-                    {verifyMutation.isPending ? (
-                      <>Validando <Loader2 className="w-5 h-5 ml-2 animate-spin" /></>
+              {verifyResult && (
+                <Card className={`border-2 ${lessonComplete ? 'bg-success/5 border-success/20' : 'bg-destructive/5 border-destructive/20'}`}>
+                  <CardContent className="p-6 flex items-start gap-4">
+                    {lessonComplete ? (
+                      <CheckCircle2 className="w-8 h-8 text-success shrink-0" />
                     ) : (
-                      <>Enviar Respostas <Send className="w-5 h-5 ml-2" /></>
+                      <AlertCircle className="w-8 h-8 text-destructive shrink-0" />
                     )}
-                  </Button>
-                </div>
+                    <div>
+                      <h4 className="text-xl font-bold mb-1">
+                        {lessonComplete ? 'Excelente!' : 'Ainda não foi dessa vez'}
+                      </h4>
+                      <p className="text-muted-foreground">
+                        {verifyResult.message || (lessonComplete ? 'Você acertou todas as questões desta aula!' : 'Algumas respostas estão incorretas. Tente novamente.')}
+                      </p>
+                      {verifyResult.currentPointsWeight > 0 && (
+                        <p className="mt-2 font-bold text-primary">+{verifyResult.currentPointsWeight} XP</p>
+                      )}
+                      {verifyResult.wasUnityCorrectlyAnswered && (
+                        <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                          <p className="font-semibold text-primary">Parabéns! Você concluiu todas as lições desta unidade!</p>
+                        </div>
+                      )}
+                      {lessonComplete && (
+                        <Button asChild className="mt-4" variant="outline">
+                          <Link href={`/unity/${unityNameParam}`}>Voltar para Unidade</Link>
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="flex justify-center pt-4">
+                <Button
+                  onClick={() => verifyMutation.mutate()}
+                  size="lg"
+                  className="w-full sm:w-64 h-14 text-lg rounded-xl shadow-xl shadow-primary/20"
+                  disabled={verifyMutation.isPending || Object.keys(selectedAnswers).filter(id => !allAnswersStatus[id]).length === 0}
+                >
+                  {verifyMutation.isPending ? (
+                    <>Validando <Loader2 className="w-5 h-5 ml-2 animate-spin" /></>
+                  ) : (
+                    <>Enviar Respostas <Send className="w-5 h-5 ml-2" /></>
+                  )}
+                </Button>
               </div>
-            ) : (
-              <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed">
-                <ClipboardList className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Sem questões</h3>
-                <p className="text-muted-foreground">Esta aula ainda não possui um questionário associado.</p>
-              </div>
-            )}
-            </section>
-          </div>
-        )}
+            </div>
+          ) : (
+            <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed">
+              <ClipboardList className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Sem questões</h3>
+              <p className="text-muted-foreground">Esta aula ainda não possui um questionário associado.</p>
+            </div>
+          )}
+          </section>
+        </div>
       </main>
     </div>
   );

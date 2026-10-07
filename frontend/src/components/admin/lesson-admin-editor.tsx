@@ -148,16 +148,6 @@ export function LessonAdminEditor({
     setEditingAlt(null);
   }
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full max-w-md" />
-        <Skeleton className="h-40 w-full rounded-xl border-2" />
-        <Skeleton className="h-40 w-full rounded-xl border-2" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -176,6 +166,13 @@ export function LessonAdminEditor({
           <Plus className="w-4 h-4 mr-2" /> Adicionar questão
         </Button>
       </div>
+
+      {isLoading && !lesson && (
+        <div className="space-y-4">
+          <Skeleton className="h-40 w-full rounded-xl border-2" />
+          <Skeleton className="h-40 w-full rounded-xl border-2" />
+        </div>
+      )}
 
       {lesson && lesson.questions.length === 0 && (
         <div className="text-center py-16 bg-card rounded-2xl border-2 border-dashed">
