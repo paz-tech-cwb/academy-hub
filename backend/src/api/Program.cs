@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using api.BackgroundServices;
 using api.Extensions;
 using infra.Config;
 using application.Config;
@@ -44,6 +45,9 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
 });
 
 builder.Services.AddHealthChecks();
+
+builder.Services.AddHttpClient();
+builder.Services.AddHostedService<FrontendHealthcheckService>();
 
 var app = builder.Build();
 
