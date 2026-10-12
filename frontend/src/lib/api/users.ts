@@ -19,6 +19,11 @@ export interface ListUsersParams {
   rolePublicId?: string;
 }
 
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface ListLeaderboardParams {
   page?: number;
   pageSize?: number;
@@ -84,6 +89,19 @@ export const usersApi = {
    */
   updateUser: async (publicId: string, payload: UpdateUserInput) => {
     await api.put(`/api/user/${publicId}`, payload);
+  },
+
+  /**
+   * Troca a senha do próprio usuário autenticado.
+   *
+   * Disponível para qualquer usuário logado, sem exigir funcionalidade. A API
+   * exige a senha atual; quando ela está errada a resposta é 400 com
+   * `message`, e não 401, então o interceptor não desloga ninguém.
+   *
+   * @param payload - Senha atual e nova senha em texto plano.
+   */
+  changeOwnPassword: async (payload: ChangePasswordInput) => {
+    await api.put('/api/me/password', payload);
   },
 
   /**

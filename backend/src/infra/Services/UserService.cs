@@ -132,6 +132,18 @@ namespace infra.Services
             return true;
         }
 
+        public async Task<ChangePasswordResult> ChangeOwnPasswordAsync(Guid publicId, string currentPassword, string newPassword)
+        {
+            var user = await GetUserAsync(publicId);
+            if (user is null) return ChangePasswordResult.UserNotFound;
+
+            if (!Verify(currentPassword, user.Password)) return ChangePasswordResult.InvalidCurrentPassword;
+
+            user.Password = HashPassword(newPassword);
+            await userRepository.UpdateAsync(user);
+            return ChangePasswordResult.Success;
+        }
+
         public async Task<bool> DeactivateUserAsync(Guid publicId)
         {
             var user = await GetUserAsync(publicId);

@@ -13,6 +13,7 @@ import {
   BookOpenCheck,
   KeyRound,
   ListVideo,
+  Lock,
   Search,
   UserCog,
   Users,
@@ -27,6 +28,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import ImportPlaylistModal from '@/components/settings/import-playlist-modal';
+import ChangePasswordDialog from '@/components/settings/change-password-dialog';
 
 interface SettingsItem {
   id: string;
@@ -39,7 +41,8 @@ interface SettingsItem {
   /**
    * Capacidades que liberam o card. Basta ter **uma** delas: a tela de
    * conteúdos, por exemplo, serve tanto quem gerencia unidades e aulas quanto
-   * quem só mexe em questões.
+   * quem só mexe em questões. Lista vazia libera para todos, como a troca da
+   * própria senha.
    */
   capabilities: string[];
   action: () => void;
@@ -50,10 +53,23 @@ export default function SettingsPage() {
   const { has, isLoading: capabilitiesLoading } = useCapabilities();
   const router = useRouter();
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [search, setSearch] = useState('');
 
   const settingsItems = useMemo<SettingsItem[]>(
     () => [
+      {
+        id: 'change-password',
+        section: 'Minha conta',
+        title: 'Trocar senha',
+        description:
+          'Defina uma nova senha para a sua conta, confirmando a senha atual.',
+        actionLabel: 'Trocar senha',
+        icon: Lock,
+        iconClassName: 'text-primary',
+        capabilities: [],
+        action: () => setShowChangePassword(true),
+      },
       {
         id: 'manage-content',
         section: 'Conteúdo',
@@ -118,7 +134,10 @@ export default function SettingsPage() {
 
   /** Cards liberados para o usuário, antes da busca. */
   const allowedItems = useMemo(
-    () => settingsItems.filter((item) => item.capabilities.some(has)),
+    () =>
+      settingsItems.filter(
+        (item) => item.capabilities.length === 0 || item.capabilities.some(has),
+      ),
     [settingsItems, has],
   );
 
@@ -229,6 +248,10 @@ export default function SettingsPage() {
       </main>
 
       <ImportPlaylistModal open={showImportModal} onOpenChange={setShowImportModal} />
+      <ChangePasswordDialog
+        open={showChangePassword}
+        onOpenChange={setShowChangePassword}
+      />
     </div>
   );
 }

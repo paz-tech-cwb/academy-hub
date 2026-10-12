@@ -9,6 +9,7 @@ namespace domain.Interfaces.Services
         Task<PaginatedResult<LeaderboardResponse>> GetLeaderboardAsync(int page, int pageSize);
         Task<bool> DeleteUserAsync(Guid publicId);
         Task<bool> ResetPasswordAsync(Guid publicId, string newPassword);
+        Task<ChangePasswordResult> ChangeOwnPasswordAsync(Guid publicId, string currentPassword, string newPassword);
         Task<bool> DeactivateUserAsync(Guid publicId);
         Task<bool> UpdateUserAsync(Guid publicId, bool? status, Guid? rolePublicId);
     }
