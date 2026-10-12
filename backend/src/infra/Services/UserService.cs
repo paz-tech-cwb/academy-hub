@@ -77,7 +77,7 @@ namespace infra.Services
             if (pageSize < 1) pageSize = 10;
             if (pageSize > 100) pageSize = 100;
 
-            var users = await userRepository.GetListAsync(u => true);
+            var users = await userRepository.GetListAsync(u => u.Status);
 
             // Username como desempate para que a paginação não repita nem pule
             // usuários quando vários têm o mesmo XP.
