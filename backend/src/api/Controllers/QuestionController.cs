@@ -1,5 +1,6 @@
 using api.Controllers.Requests;
 using application.UseCases;
+using domain.Constants;
 using domain.Entities;
 using domain.Interfaces.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +10,7 @@ namespace api.Controllers
 {
     [Route("api/question")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Capabilities.QuestionnaireManage)]
     [Tags("Questões")]
     public class QuestionController(IQuestionRepository questionRepository, CreateQuestionUseCase createQuestionUseCase, DeleteQuestionUseCase deleteQuestionUseCase) : ControllerBase
     {

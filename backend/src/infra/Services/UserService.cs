@@ -7,9 +7,9 @@ using static BCrypt.Net.BCrypt;
 
 namespace infra.Services
 {
-    public class UserService(IUserRepository userRepository) : IUserService
+    public class UserService(IUserRepository userRepository, IRoleRepository roleRepository, ICapabilityResolver capabilityResolver) : IUserService
     {
-        public async Task<PaginatedResult<UserListResponse>> GetUsersAsync(int page, int pageSize, string? search, bool? status, Roles? role)
+        public async Task<PaginatedResult<UserListResponse>> GetUsersAsync(int page, int pageSize, string? search, bool? status, Guid? rolePublicId)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
@@ -26,8 +26,16 @@ namespace infra.Services
             if (status.HasValue)
                 users = users.Where(u => u.Status == status.Value).ToList();
 
-            if (role.HasValue)
-                users = users.Where(u => u.Role == role.Value).ToList();
+            var roles = await roleRepository.GetListAsync(r => true);
+            var rolesById = roles.ToDictionary(r => r.Id);
+
+            if (rolePublicId.HasValue)
+            {
+                // Função inexistente filtra para lista vazia, em vez de
+                // silenciosamente ignorar o filtro.
+                var filter = roles.FirstOrDefault(r => r.PublicId == rolePublicId.Value);
+                users = filter is null ? [] : users.Where(u => (int)u.Role == filter.Id).ToList();
+            }
 
             var totalCount = users.Count;
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -36,13 +44,20 @@ namespace infra.Services
                 .OrderBy(u => u.Username)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(u => new UserListResponse
+                .Select(u =>
                 {
-                    PublicId = u.PublicId,
-                    Username = u.Username,
-                    Experience = u.Experience,
-                    Status = u.Status,
-                    Role = u.Role
+                    rolesById.TryGetValue((int)u.Role, out var userRole);
+
+                    return new UserListResponse
+                    {
+                        PublicId = u.PublicId,
+                        Username = u.Username,
+                        Experience = u.Experience,
+                        Status = u.Status,
+                        Role = u.Role,
+                        RolePublicId = userRole?.PublicId,
+                        RoleName = userRole?.Name ?? u.Role.ToString()
+                    };
                 })
                 .ToList();
 
@@ -103,6 +118,7 @@ namespace infra.Services
             if (user is null) return false;
 
             await userRepository.DeleteAsync(user);
+            capabilityResolver.Invalidate();
             return true;
         }
 
@@ -123,18 +139,30 @@ namespace infra.Services
 
             user.Status = false;
             await userRepository.UpdateAsync(user);
+            capabilityResolver.Invalidate();
             return true;
         }
 
-        public async Task<bool> UpdateUserAsync(Guid publicId, bool? status, Roles? role)
+        public async Task<bool> UpdateUserAsync(Guid publicId, bool? status, Guid? rolePublicId)
         {
             var user = await GetUserAsync(publicId);
             if (user is null) return false;
 
+            if (rolePublicId.HasValue)
+            {
+                var role = await roleRepository.GetAsync(r => r.PublicId == rolePublicId.Value);
+                if (role is null) return false;
+
+                // roles.id e o enum carregam os mesmos valores, então o cast
+                // também cobre as funções criadas em runtime, que não têm nome
+                // no enum.
+                user.Role = (Roles)role.Id;
+            }
+
             if (status.HasValue) user.Status = status.Value;
-            if (role.HasValue) user.Role = role.Value;
 
             await userRepository.UpdateAsync(user);
+            capabilityResolver.Invalidate();
             return true;
         }
 

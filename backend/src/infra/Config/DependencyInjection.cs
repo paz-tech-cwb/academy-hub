@@ -11,6 +11,7 @@ namespace infra.Config
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
             services.AddScoped<AppDbContext>();
+            services.AddMemoryCache();
             AddRepositories(services);
             AddServices(services);
             
@@ -27,6 +28,8 @@ namespace infra.Config
             services.AddScoped<IUnityRepository, UnityRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAlternativeRepository, AlternativeRepository>();
+            services.AddScoped<IRoleRepository, RoleRepository>();
+            services.AddScoped<ICapabilityRepository, CapabilityRepository>();
         }
 
         private static void AddServices(IServiceCollection services)
@@ -39,6 +42,7 @@ namespace infra.Config
             services.AddScoped<IJwtService, JwtService>();
             services.AddTransient<IPlaylistService, PlaylistService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddSingleton<ICapabilityResolver, CapabilityResolver>();
         }
     }
 }

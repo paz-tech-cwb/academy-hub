@@ -17,7 +17,6 @@ import { LogOut, BookOpen, Award, Settings2, Menu, Sun, Moon, Trophy } from 'luc
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore } from 'react';
-import { UserRole } from '@/types';
 
 const emptySubscribe = () => () => {};
 
@@ -26,7 +25,6 @@ const menuItemClass =
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const isAdmin = user?.role === UserRole.Admin;
   const { resolvedTheme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const isDark = mounted && resolvedTheme === 'dark';
@@ -78,14 +76,12 @@ export default function Navbar() {
                       >
                         <Trophy className="w-4 h-4" /> Leaderboard
                       </DrawerClose>
-                      {isAdmin && (
-                        <DrawerClose
-                          nativeButton={false}
-                          render={<Link href="/settings" className={menuItemClass} />}
-                        >
-                          <Settings2 className="w-4 h-4" /> Configurações
-                        </DrawerClose>
-                      )}
+                      <DrawerClose
+                        nativeButton={false}
+                        render={<Link href="/settings" className={menuItemClass} />}
+                      >
+                        <Settings2 className="w-4 h-4" /> Configurações
+                      </DrawerClose>
                       <div className="flex items-center justify-between gap-3 rounded-md px-3 py-2.5">
                         <span className="flex items-center gap-3 text-sm font-medium">
                           {isDark ? (

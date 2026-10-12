@@ -1,5 +1,6 @@
 using api.Controllers.Requests;
 using application.UseCases;
+using domain.Constants;
 using domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,7 @@ namespace api.Controllers
 {
     [Route("api/alternative")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Capabilities.QuestionnaireManage)]
     [Tags("Alternativas")]
     public class AlternativeController(CreateAlternativeUseCase createAlternativeUseCase, UpdateAlternativeUseCase updateAlternativeUseCase, DeleteAlternativeUseCase deleteAlternativeUseCase) : ControllerBase
     {

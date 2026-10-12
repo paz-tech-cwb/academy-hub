@@ -3,6 +3,8 @@ SET CHARACTER SET utf8mb4;
 
 use academyhub;
 
+drop table if exists role_capabilities;
+drop table if exists capabilities;
 drop table if exists answers;
 drop table if exists alternatives;
 drop table if exists questions;
@@ -10,6 +12,33 @@ drop table if exists lessons;
 drop table if exists certificates;
 drop table if exists unities;
 drop table if exists users;
+drop table if exists roles;
+
+create table roles(
+    id int primary key auto_increment,
+    public_id varchar(36) not null unique,
+    name varchar(50) not null unique,
+    description varchar(255),
+    is_system boolean not null default false
+);
+
+create table capabilities(
+    id int primary key auto_increment,
+    public_id varchar(36) not null unique,
+    code varchar(100) not null unique,
+    name varchar(100) not null,
+    description varchar(255)
+);
+
+create table role_capabilities(
+    id int primary key auto_increment,
+    public_id varchar(36) not null unique,
+    role_id int not null,
+    capability_id int not null,
+    unique key uq_role_capability (role_id, capability_id),
+    foreign key (role_id) references roles(id) on delete cascade,
+    foreign key (capability_id) references capabilities(id) on delete cascade
+);
 
 create table users(
     id int primary key auto_increment,
@@ -18,7 +47,8 @@ create table users(
     password varchar(255) not null,
     experience int not null default 0,
     status boolean default true,
-    role int not null default 0
+    role int not null default 1,
+    constraint fk_users_role foreign key (role) references roles(id)
 );
 
 create table unities(
@@ -85,41 +115,67 @@ create table answers(
     foreign key (unity_id) references unities(id)
 );
 
+-- Ids explícitos: users.role é FK para roles.id e o enum domain.Enums.Roles
+-- fixa os mesmos valores. O name TEM que casar com nameof(Roles.X), porque o
+-- JwtService grava user.Role.ToString() no claim.
+insert into roles(id, public_id, name, description, is_system) values
+    (1, UUID(), "User", "Usuário comum da plataforma.", true),
+    (2, UUID(), "Admin", "Administrador com acesso total.", true),
+    (3, UUID(), "Professor", "Cria questionários e importa playlists.", false);
+
+alter table roles auto_increment = 4;
+
+-- O code é constante em domain.Constants.Capabilities e aparece no
+-- [Authorize(Policy = ...)]: criar linha nova aqui não concede nada.
+insert into capabilities(id, public_id, code, name, description) values
+    (1, UUID(), "content.manage", "Gerenciar conteúdos", "Criar, editar, excluir e reordenar unidades e aulas."),
+    (2, UUID(), "content.read", "Visualizar conteúdos para edição", "Ver a árvore de questões e alternativas de uma aula."),
+    (3, UUID(), "questionnaire.manage", "Gerenciar questionários", "Criar, editar e excluir questões e alternativas."),
+    (4, UUID(), "playlist.import", "Importar playlists", "Importar uma playlist do YouTube como nova unidade."),
+    (5, UUID(), "users.manage", "Gerenciar usuários", "Listar, editar, inativar e excluir usuários."),
+    (6, UUID(), "permissions.manage", "Gerenciar permissões", "Configurar funções e as funcionalidades de cada uma.");
+
+-- A função aponta direto para as funcionalidades. User fica sem nenhuma:
+-- acessa /settings e não vê nenhum card.
+insert into role_capabilities(public_id, role_id, capability_id) values
+    (UUID(), 2, 1), (UUID(), 2, 2), (UUID(), 2, 3), (UUID(), 2, 4), (UUID(), 2, 5), (UUID(), 2, 6),
+    (UUID(), 3, 2), (UUID(), 3, 3), (UUID(), 3, 4);
+
 insert into users(
     public_id,
     username,
     password,
     role
 ) values (
-    "33e5cabd-e14a-415a-b94d-421bead93a35",
+    UUID(),
     "lucasaguiar",
     "$2a$11$AaHjow/HXXwaP6laCO.c4uyfQ2JPUtR5IzDI4.h61eH0crqtJbfP2",
-    1
+    2
 ), (
-    "3b391393-bb34-49bf-9037-da0f3e60ad17",
+    UUID(),
     "erielfundador",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
-    0
+    1
 ), (
-    "d5b210fa-2e5f-4e4f-899f-4f609820a4b4",
+    UUID(),
     "jackson",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
-    0
+    1
 ), (
-    "4983b8b2-6ae3-45aa-ba25-4c2347d80058",
+    UUID(),
     "kaucartelli",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
-    0
+    1
 ), (
-    "15fe54d1-c50b-4051-8fc5-d1144f92217e",
+    UUID(),
     "wollimendes",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
-    0
+    1
 ), (
-    "54d258ba-7ce5-42e0-9b6d-57756bad1555",
+    UUID(),
     "danielsouza",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
-    0
+    1
 );
 
 
@@ -129,48 +185,48 @@ insert into users(
 
 insert into unities(public_id, name)
 values(
-    "613c10a9-7f33-453b-a704-56a85679727b",
+    UUID(),
     "Teologias Perigosas"
 );
 
 insert into lessons(public_id, title, description, sequence, video_url, unity_id)
 values
-    ("03eaaa3f-9baa-4e5b-9da5-bfe2545a8d8e", "Como Identificar um Ensino Falso", 'Nesta primeira mensagem da série "Teologias Perigosas"[...] na fé cristã.', 1, "https://youtu.be/7r1qARCbL8I?si=68QLE6yqbYFTm7jg", 1),
-    ("be8626f0-d0b5-4f94-82e1-0e9f4c311ab1", "A Bíblia Tem Algum Erro?", 'Na segunda mensagem da série “Teologias Perigosas”[...] fortalecer sua fé.', 2, "https://youtu.be/zvsLciGgqVU?si=1Z7Z0xYguQJVncYh", 1),
-    ("dbf26f85-08c6-478e-a6fd-7b09aa15f816", "Cuidado com Esses Ensinos", 'Na terceira e última mensagem da série “Teologias Perigosas”[...] da graça bíblica.', 3, "https://youtu.be/4QwlBR7qETw?si=dIpNmzx3qCLlQGUj", 1);
+    (UUID(), "Como Identificar um Ensino Falso", 'Nesta primeira mensagem da série "Teologias Perigosas"[...] na fé cristã.', 1, "https://youtu.be/7r1qARCbL8I?si=68QLE6yqbYFTm7jg", 1),
+    (UUID(), "A Bíblia Tem Algum Erro?", 'Na segunda mensagem da série “Teologias Perigosas”[...] fortalecer sua fé.', 2, "https://youtu.be/zvsLciGgqVU?si=1Z7Z0xYguQJVncYh", 1),
+    (UUID(), "Cuidado com Esses Ensinos", 'Na terceira e última mensagem da série “Teologias Perigosas”[...] da graça bíblica.', 3, "https://youtu.be/4QwlBR7qETw?si=dIpNmzx3qCLlQGUj", 1);
 
 insert into questions(public_id, statement, lesson_id, unity_id)
 values
-    ("24527d31-2fce-4508-9ebc-3e4f1e15bdfa", "Título questão 1", 1, 1),
-    ("b1233014-eefa-44e2-b3ab-026706c66a84", "Título questão 2", 1, 1),
-    ("e56d470c-d16b-4898-bf5c-22ef141750b9", "Título questão 3", 2, 1),
-    ("abd4ae85-d017-4f0f-aa4a-63a59cc1c270", "Título questão 4", 2, 1),
-    ("299e6bf0-3b50-4a23-b416-30e6249d980c", "Título questão 5", 3, 1),
-    ("13a7003c-1098-41bc-8956-27781a31215d", "Título questão 6", 3, 1);
+    (UUID(), "Título questão 1", 1, 1),
+    (UUID(), "Título questão 2", 1, 1),
+    (UUID(), "Título questão 3", 2, 1),
+    (UUID(), "Título questão 4", 2, 1),
+    (UUID(), "Título questão 5", 3, 1),
+    (UUID(), "Título questão 6", 3, 1);
 
 insert into alternatives(public_id, text, is_correct, question_id)
 values
-    ("80c149cd-3ef3-4c80-b1d8-7fbbfd8c2693", "Texto f da alternativa", false, 1),
-    ("e5b0710d-9842-47f1-b094-3c30e5a93270", "Texto 3 da alternativa", true, 1),
-    ("af765fe3-c287-4c75-a5ce-e062cfe2b986", "Texto b da alternativa", false, 1),
-    ("c72d0e77-3ef7-4dc6-a55b-d040f061a637", "Texto 5 da alternativa", false, 1),
-    ("01f9b7e0-93f4-4621-ab43-b1e6c6b1a34e", "Texto 5 da alternativa", false, 2),
-    ("b6d5fd89-107f-4585-972a-39e16225b5b8", "Texto 0 da alternativa", false, 2),
-    ("68a24cf7-a434-4b47-94ee-ea1cfc71a481", "Texto 1 da alternativa", true, 2),
-    ("0c8a496b-423a-4a3c-b168-ea7812e88502", "Texto b da alternativa", false, 2),
-    ("22f629cd-145a-4403-9858-e5e27846306a", "Texto c da alternativa", true, 3),
-    ("54acc19d-09e3-4c93-b687-31dafa0a1f4b", "Texto 3 da alternativa", false, 3),
-    ("6c2d1b0d-6c84-4b20-a8f9-5f7a4c67ee26", "Texto 9 da alternativa", false, 3),
-    ("6b8306f2-19eb-4201-a80d-48737f316366", "Texto a da alternativa", false, 3),
-    ("b78ab888-c7a2-41b8-9aac-f56d60b3b7bf", "Texto 1 da alternativa", false, 4),
-    ("8443be98-42c9-4ca7-8ad3-2978fe0b60b9", "Texto 8 da alternativa", false, 4),
-    ("e3be774d-be78-417c-9ae0-4426fdcac033", "Texto c da alternativa", true, 4),
-    ("03fdcf2c-cf34-45e6-b4ca-56eb301a7204", "Texto 5 da alternativa", false, 4),
-    ("0c7f6a2d-295a-41fb-a40d-4b2788e2e662", "Texto 9 da alternativa", false, 5),
-    ("593e9d35-82dc-4952-99f7-d6c0031dc9e0", "Texto 8 da alternativa", false, 5),
-    ("4457b265-f749-4a08-87b4-953baa730344", "Texto 5 da alternativa", true, 5),
-    ("e6d5cbe9-42c4-4a4e-9392-384d2956a1ff", "Texto 7 da alternativa", false, 5),
-    ("02db9eab-4149-4f2e-8502-10db41ced859", "Texto 8 da alternativa", true, 6),
-    ("0a409df7-2987-466f-b7cf-4e91336c23a4", "Texto 0 da alternativa", false, 6),
-    ("29cf7fa1-f9f3-405b-b2e8-88f30a0746f8", "Texto e da alternativa", false, 6),
-    ("bed2a7ed-8657-427f-b36b-276216fc787e", "Texto 9 da alternativa", false, 6);
+    (UUID(), "Texto f da alternativa", false, 1),
+    (UUID(), "Texto 3 da alternativa", true, 1),
+    (UUID(), "Texto b da alternativa", false, 1),
+    (UUID(), "Texto 5 da alternativa", false, 1),
+    (UUID(), "Texto 5 da alternativa", false, 2),
+    (UUID(), "Texto 0 da alternativa", false, 2),
+    (UUID(), "Texto 1 da alternativa", true, 2),
+    (UUID(), "Texto b da alternativa", false, 2),
+    (UUID(), "Texto c da alternativa", true, 3),
+    (UUID(), "Texto 3 da alternativa", false, 3),
+    (UUID(), "Texto 9 da alternativa", false, 3),
+    (UUID(), "Texto a da alternativa", false, 3),
+    (UUID(), "Texto 1 da alternativa", false, 4),
+    (UUID(), "Texto 8 da alternativa", false, 4),
+    (UUID(), "Texto c da alternativa", true, 4),
+    (UUID(), "Texto 5 da alternativa", false, 4),
+    (UUID(), "Texto 9 da alternativa", false, 5),
+    (UUID(), "Texto 8 da alternativa", false, 5),
+    (UUID(), "Texto 5 da alternativa", true, 5),
+    (UUID(), "Texto 7 da alternativa", false, 5),
+    (UUID(), "Texto 8 da alternativa", true, 6),
+    (UUID(), "Texto 0 da alternativa", false, 6),
+    (UUID(), "Texto e da alternativa", false, 6),
+    (UUID(), "Texto 9 da alternativa", false, 6);

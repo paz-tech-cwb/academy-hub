@@ -1,6 +1,7 @@
 export enum UserRole {
-  User = 0,
-  Admin = 1,
+  User = 1,
+  Admin = 2,
+  Professor = 3,
 }
 
 export interface LoginResponse {
@@ -16,6 +17,9 @@ export interface ManagedUser {
   experience: number;
   status: boolean;
   role: UserRole;
+  /** Identifica a função mesmo quando ela foi criada em runtime e não existe em `UserRole`. */
+  rolePublicId: string | null;
+  roleName: string;
 }
 
 export interface PaginatedUsers {
@@ -28,8 +32,32 @@ export interface PaginatedUsers {
 
 export interface UpdateUserInput {
   status?: boolean;
-  role?: UserRole;
+  rolePublicId?: string;
 }
+
+/** Funcionalidade do catálogo: a unidade de acesso que uma função concede. */
+export interface Capability {
+  publicId: string;
+  code: string;
+  name: string;
+  description: string | null;
+}
+
+/** Função: o que se atribui ao usuário. Aponta direto para as funcionalidades. */
+export interface Role {
+  publicId: string;
+  name: string;
+  description: string | null;
+  isSystem: boolean;
+  capabilities: Capability[];
+}
+
+export interface CreateRoleInput {
+  name: string;
+  description?: string | null;
+}
+
+export type UpdateRoleInput = CreateRoleInput;
 
 export interface LeaderboardEntry {
   position: number;

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { decodeToken } from '@/lib/jwt';
 import { UserRole } from '@/types';
 
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -51,12 +53,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(TOKEN_KEY, token);
     setUser(decoded);
 
+    // Nada em cache pertence a quem acabou de entrar. Sem isso, o
+    // staleTime de 60s faria o novo usuário ver as capacidades (e as listas)
+    // do usuário anterior até dar reload na página.
+    queryClient.clear();
+
     router.push('/');
   };
 
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
     setUser(null);
+    queryClient.clear();
     router.push('/login');
   };
 

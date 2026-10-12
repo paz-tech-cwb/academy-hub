@@ -6,6 +6,8 @@ import { createColumnHelper, type PaginationState } from '@tanstack/react-table'
 import Link from 'next/link';
 import { ManagedUser, UserRole } from '@/types';
 import { useRequireRole } from '@/hooks/use-require-auth';
+import { permissionsApi } from '@/lib/api/permissions';
+import { queryKeys } from '@/lib/query-keys';
 import Navbar from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,7 +35,8 @@ import { DataTable } from './data-table';
 import type { UsersTableFeatures } from './data-table-features';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
-type RoleFilter = 'all' | 'user' | 'admin';
+/** 'all' ou o publicId de uma função vinda de `GET /api/role`. */
+type RoleFilter = string;
 
 const columnHelper = createColumnHelper<UsersTableFeatures, ManagedUser>();
 
@@ -49,8 +52,16 @@ export default function UsersSettingsPage() {
   const [editValues, setEditValues] = useState<{
     password: string;
     status: boolean;
-    role: UserRole;
-  }>({ password: '', status: true, role: UserRole.User });
+    rolePublicId: string;
+  }>({ password: '', status: true, rolePublicId: '' });
+
+  // As opções de função vêm do servidor: assim qualquer função cadastrada,
+  // inclusive as criadas em runtime, pode ser filtrada e atribuída.
+  const { data: roles } = useQuery({
+    queryKey: queryKeys.permissions.roles,
+    queryFn: permissionsApi.listRoles,
+    enabled: isReady,
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -76,21 +87,24 @@ export default function UsersSettingsPage() {
         pageSize: pagination.pageSize,
         search: debouncedSearch.trim() || undefined,
         status: statusFilter === 'all' ? undefined : statusFilter === 'active',
-        role:
-          roleFilter === 'all'
-            ? undefined
-            : roleFilter === 'admin'
-              ? UserRole.Admin
-              : UserRole.User,
+        rolePublicId: roleFilter === 'all' ? undefined : roleFilter,
       }),
     enabled: isReady,
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: ({ publicId, status, role }: { publicId: string; status?: boolean; role?: UserRole }) =>
-      usersApi.updateUser(publicId, { status, role }),
+    mutationFn: ({
+      publicId,
+      status,
+      rolePublicId,
+    }: {
+      publicId: string;
+      status?: boolean;
+      rolePublicId?: string;
+    }) => usersApi.updateUser(publicId, { status, rolePublicId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.permissions.me });
       toast.success('Usuário atualizado.');
       setEditingId(null);
     },
@@ -120,7 +134,7 @@ export default function UsersSettingsPage() {
     setEditValues({
       password: '',
       status: user.status,
-      role: user.role,
+      rolePublicId: user.rolePublicId ?? '',
     });
   }, []);
 
@@ -132,7 +146,7 @@ export default function UsersSettingsPage() {
       updateUserMutation.mutate({
         publicId: userId,
         status: editValues.status,
-        role: editValues.role,
+        rolePublicId: editValues.rolePublicId || undefined,
       });
     },
     [editValues, resetPasswordMutation, updateUserMutation],
@@ -140,7 +154,7 @@ export default function UsersSettingsPage() {
 
   const handleCancel = useCallback(() => {
     setEditingId(null);
-    setEditValues({ password: '', status: true, role: UserRole.User });
+    setEditValues({ password: '', status: true, rolePublicId: '' });
   }, []);
 
   const columns = useMemo(
@@ -178,7 +192,7 @@ export default function UsersSettingsPage() {
         columnHelper.display({
           id: 'status',
           header: 'Status',
-          meta: { width: 130 },
+          meta: { width: 100 },
           cell: ({ row }) =>
             editingId === row.original.publicId ? (
               <Switch
@@ -195,26 +209,29 @@ export default function UsersSettingsPage() {
         }),
         columnHelper.display({
           id: 'role',
-          header: 'Role',
-          meta: { width: 150 },
+          header: 'Função',
+          meta: { width: 130 },
           cell: ({ row }) =>
             editingId === row.original.publicId ? (
               <Select
-                value={editValues.role.toString()}
+                value={editValues.rolePublicId}
                 onValueChange={(v: string) =>
-                  setEditValues((prev) => ({ ...prev, role: Number(v) as UserRole }))
+                  setEditValues((prev) => ({ ...prev, rolePublicId: v }))
                 }
               >
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue />
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Função" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={UserRole.User.toString()}>User</SelectItem>
-                  <SelectItem value={UserRole.Admin.toString()}>Admin</SelectItem>
+                  {roles?.map((role) => (
+                    <SelectItem key={role.publicId} value={role.publicId}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             ) : (
-              <span>{row.original.role === UserRole.Admin ? 'Admin' : 'User'}</span>
+              <span>{row.original.roleName}</span>
             ),
         }),
         columnHelper.display({
@@ -240,7 +257,7 @@ export default function UsersSettingsPage() {
             ),
         }),
       ]),
-    [editingId, editValues, handleCancel, handleSave, handleEdit, isSaving],
+    [editingId, editValues, handleCancel, handleSave, handleEdit, isSaving, roles],
   );
 
   const breadcrumb = (
@@ -306,12 +323,15 @@ export default function UsersSettingsPage() {
             }}
           >
             <SelectTrigger className="w-full sm:w-[170px]">
-              <SelectValue placeholder="Role" />
+              <SelectValue placeholder="Função" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas as roles</SelectItem>
-              <SelectItem value="user">User</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="all">Todas as funções</SelectItem>
+              {roles?.map((role) => (
+                <SelectItem key={role.publicId} value={role.publicId}>
+                  {role.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

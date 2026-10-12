@@ -1,4 +1,5 @@
 using application.UseCases;
+using domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +7,7 @@ namespace api.Controllers;
 
 [Route("api/playlist")]
 [ApiController]
-[Authorize]
+[Authorize(Policy = Capabilities.PlaylistImport)]
 public class PlaylistController(ImportPlaylistUseCase importPlaylistUseCase) : ControllerBase
 {
     [HttpPost("import/{playlistUrl}")]

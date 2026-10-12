@@ -37,4 +37,12 @@ export const queryKeys = {
     /** Chave da listagem de certificados do usuário. */
     all: ['certificates'] as const,
   },
+  permissions: {
+    /** Chave da listagem de funções com as funcionalidades vinculadas. */
+    roles: ['permissions', 'roles'] as const,
+    /** Chave do catálogo de funcionalidades. */
+    capabilities: ['permissions', 'capabilities'] as const,
+    /** Chave das capacidades do usuário autenticado. */
+    me: ['permissions', 'me'] as const,
+  },
 };

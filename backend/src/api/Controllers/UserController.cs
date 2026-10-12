@@ -76,7 +76,7 @@ namespace api.Controllers
 
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Listar usuários")]
-        [EndpointDescription("Busca usuários com paginação e filtros opcionais por username, status e role.")]
+        [EndpointDescription("Busca usuários com paginação e filtros opcionais por username, status e função.")]
         [ProducesResponseType<PaginatedResult<UserListResponse>>(StatusCodes.Status200OK)]
         [HttpGet]
         public async Task<ActionResult<PaginatedResult<UserListResponse>>> GetUsers(
@@ -84,21 +84,21 @@ namespace api.Controllers
             [FromQuery] int pageSize = 10,
             [FromQuery][Description("Filtra pelo username (contém).")] string? search = null,
             [FromQuery][Description("Filtra pelo status (ativo/inativo).")] bool? status = null,
-            [FromQuery][Description("Filtra pela role.")] domain.Enums.Roles? role = null)
+            [FromQuery][Description("Filtra pela função, pelo publicId dela.")] Guid? rolePublicId = null)
         {
-            var result = await userService.GetUsersAsync(page, pageSize, search, status, role);
+            var result = await userService.GetUsersAsync(page, pageSize, search, status, rolePublicId);
             return Ok(result);
         }
 
         [Authorize(Roles = "Admin")]
         [EndpointSummary("Atualizar usuário")]
-        [EndpointDescription("Atualiza status e/ou role do usuário.")]
+        [EndpointDescription("Atualiza status e/ou função do usuário. A função é informada pelo publicId, então qualquer função cadastrada pode ser atribuída.")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{publicId}")]
         public async Task<IActionResult> UpdateUser(Guid publicId, [FromBody] UpdateUserRequest request)
         {
-            var found = await userService.UpdateUserAsync(publicId, request.Status, request.Role);
+            var found = await userService.UpdateUserAsync(publicId, request.Status, request.RolePublicId);
             return found ? NoContent() : NotFound();
         }
 

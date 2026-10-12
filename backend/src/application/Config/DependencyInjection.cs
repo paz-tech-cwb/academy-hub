@@ -1,3 +1,4 @@
+using application.Services;
 using application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,6 +9,7 @@ namespace application.Config
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
             AddUseCases(services);
+            AddServices(services);
             return services;
         }
 
@@ -34,6 +36,12 @@ namespace application.Config
             services.AddScoped<CreateAlternativeUseCase>();
             services.AddScoped<UpdateAlternativeUseCase>();
             services.AddScoped<DeleteAlternativeUseCase>();
+        }
+
+        private static void AddServices(IServiceCollection services)
+        {
+            services.AddScoped<RoleService>();
+            services.AddScoped<CapabilityService>();
         }
     }
 }

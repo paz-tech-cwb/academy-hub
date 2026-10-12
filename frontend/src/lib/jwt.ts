@@ -45,11 +45,33 @@ export function decodeToken(token: string): DecodedToken | null {
   }
 }
 
+/**
+ * O claim `role` chega como o nome do enum do backend (`"Admin"`), mas a
+ * forma numérica também é aceita.
+ *
+ * Função criada em runtime (id >= 4) não existe no enum e cai em
+ * `UserRole.User`. Isso não afeta permissão: o enforcement é no servidor e a
+ * UI é liberada por capacidade, não por função.
+ */
 function parseRole(role: unknown): UserRole {
-  if (typeof role === 'number') return role === UserRole.Admin ? UserRole.Admin : UserRole.User;
-  if (typeof role === 'string') {
-    if (role === UserRole.Admin.toString() || role === 'Admin') return UserRole.Admin;
-    if (role === UserRole.User.toString() || role === 'User') return UserRole.User;
+  const byName: Record<string, UserRole> = {
+    User: UserRole.User,
+    Admin: UserRole.Admin,
+    Professor: UserRole.Professor,
+  };
+
+  if (typeof role === 'number') {
+    return Object.values(UserRole).includes(role) ? (role as UserRole) : UserRole.User;
   }
+
+  if (typeof role === 'string') {
+    if (role in byName) return byName[role];
+
+    const numeric = Number(role);
+    if (!Number.isNaN(numeric) && Object.values(UserRole).includes(numeric)) {
+      return numeric as UserRole;
+    }
+  }
+
   return UserRole.User;
 }

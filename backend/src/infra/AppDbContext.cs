@@ -13,6 +13,9 @@ namespace infra
         public DbSet<Alternative> Alternatives { get; set; }
         public DbSet<Answer> Answers { get; set; }
         public DbSet<Certificate> Certificates { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<Capability> Capabilities { get; set; }
+        public DbSet<RoleCapability> RoleCapabilities { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

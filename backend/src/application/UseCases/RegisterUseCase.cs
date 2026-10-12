@@ -1,5 +1,6 @@
 using System.Net;
 using application.Dtos;
+using domain.Enums;
 using domain.Interfaces.Repositories;
 using domain.Models;
 using static BCrypt.Net.BCrypt;
@@ -22,6 +23,7 @@ namespace application.UseCases
                 Username = normalizedUsername,
                 Password = HashPassword(password),
                 Status = true,
+                Role = Roles.User,
             });
 
             return Created();

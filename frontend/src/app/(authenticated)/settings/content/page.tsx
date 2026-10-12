@@ -43,12 +43,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { useRequireRole } from '@/hooks/use-require-auth';
+import { useRequireAuth } from '@/hooks/use-require-auth';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { unitiesApi } from '@/lib/api/unities';
 import { lessonsApi } from '@/lib/api/lessons';
 import { queryKeys } from '@/lib/query-keys';
 import { getApiErrorMessage } from '@/lib/api/errors';
-import { Lesson, ReorderLessonsInput, Unity, UserRole } from '@/types';
+import { Lesson, ReorderLessonsInput, Unity } from '@/types';
 import { UnityDialog } from '@/components/admin/unity-dialog';
 import { LessonDialog } from '@/components/admin/lesson-dialog';
 import { ConfirmDialog } from '@/components/admin/confirm-dialog';
@@ -59,6 +60,8 @@ interface SortableLessonRowProps {
   position: number;
   isSelected: boolean;
   isReordering: boolean;
+  /** Sem `content.manage` a aula só pode ser selecionada, não reordenada nem editada. */
+  canManage: boolean;
   onSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -69,13 +72,14 @@ function SortableLessonRow({
   position,
   isSelected,
   isReordering,
+  canManage,
   onSelect,
   onEdit,
   onDelete,
 }: SortableLessonRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: lesson.publicId,
-    disabled: isReordering,
+    disabled: isReordering || !canManage,
   });
 
   return (
@@ -86,46 +90,63 @@ function SortableLessonRow({
         isSelected ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
       } ${isDragging ? 'z-10 shadow-lg' : ''}`}
     >
-      <button
-        type="button"
-        className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
-        aria-label={`Reordenar ${lesson.title}`}
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical className="w-4 h-4" />
-      </button>
+      {canManage && (
+        <button
+          type="button"
+          className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+          aria-label={`Reordenar ${lesson.title}`}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+      )}
 
       <button type="button" onClick={onSelect} className="flex-1 min-w-0 text-left">
         <span className="block font-medium text-sm truncate">{lesson.title}</span>
         <span className="block text-xs text-muted-foreground">Aula {position}</span>
       </button>
 
-      <Button
-        size="icon"
-        variant="ghost"
-        className="w-8 h-8 shrink-0"
-        onClick={onEdit}
-      >
-        <Pencil className="w-4 h-4" />
-        <span className="sr-only">Editar {lesson.title}</span>
-      </Button>
-      <Button
-        size="icon"
-        variant="ghost"
-        className="w-8 h-8 shrink-0 text-destructive"
-        onClick={onDelete}
-      >
-        <Trash2 className="w-4 h-4" />
-        <span className="sr-only">Excluir {lesson.title}</span>
-      </Button>
+      {canManage && (
+        <>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="w-8 h-8 shrink-0"
+            onClick={onEdit}
+          >
+            <Pencil className="w-4 h-4" />
+            <span className="sr-only">Editar {lesson.title}</span>
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="w-8 h-8 shrink-0 text-destructive"
+            onClick={onDelete}
+          >
+            <Trash2 className="w-4 h-4" />
+            <span className="sr-only">Excluir {lesson.title}</span>
+          </Button>
+        </>
+      )}
     </div>
   );
 }
 
 export default function ContentSettingsPage() {
-  const { isReady } = useRequireRole(UserRole.Admin);
+  const { isReady } = useRequireAuth();
+  const { has, isLoading: capabilitiesLoading } = useCapabilities();
   const queryClient = useQueryClient();
+
+  /**
+   * A tela atende dois públicos: quem gerencia unidades e aulas
+   * (`content.manage`) e quem só mexe em questões e alternativas
+   * (`questionnaire.manage`, lendo a árvore com `content.read`). Quem tem
+   * qualquer um dos três entra; o que cada um pode fazer é gateado abaixo.
+   */
+  const canManageContent = has('content.manage');
+  const canOpen =
+    canManageContent || has('content.read') || has('questionnaire.manage');
 
   const [unitySelection, setUnitySelection] = useState<string | null>(null);
   const [lessonSelection, setLessonSelection] = useState<string | null>(null);
@@ -303,19 +324,23 @@ export default function ContentSettingsPage() {
     </Breadcrumb>
   );
 
-  if (!isReady) {
+  const header = (
+    <header className="mb-8">
+      {breadcrumb}
+      <h1 className="text-3xl font-bold tracking-tight mb-2">Configuração de conteúdos</h1>
+      <p className="text-muted-foreground">
+        Crie e organize unidades, aulas, questões e alternativas. Nesta tela não é possível
+        assistir às aulas nem responder questionários.
+      </p>
+    </header>
+  );
+
+  if (!isReady || capabilitiesLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
         <main className="container mx-auto px-4 py-8 flex-1">
-          <header className="mb-8">
-            {breadcrumb}
-            <h1 className="text-3xl font-bold tracking-tight mb-2">Configuração de conteúdos</h1>
-            <p className="text-muted-foreground">
-              Crie e organize unidades, aulas, questões e alternativas. Nesta tela não é possível
-              assistir às aulas nem responder questionários.
-            </p>
-          </header>
+          {header}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-4 space-y-6">
               <Skeleton className="h-64 w-full rounded-xl bg-card ring-1 ring-foreground/10" />
@@ -330,33 +355,42 @@ export default function ContentSettingsPage() {
     );
   }
 
+  if (!canOpen) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar />
+        <main className="container mx-auto px-4 py-8 flex-1">
+          {header}
+          <p className="text-sm text-muted-foreground">
+            Você não tem acesso à configuração de conteúdos.
+          </p>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="container mx-auto px-4 py-8 flex-1">
-        <header className="mb-8">
-          {breadcrumb}
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Configuração de conteúdos</h1>
-          <p className="text-muted-foreground">
-            Crie e organize unidades, aulas, questões e alternativas. Nesta tela não é possível
-            assistir às aulas nem responder questionários.
-          </p>
-        </header>
+        {header}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-4 w-full space-y-6">
             <Card>
               <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
                 <CardTitle className="text-lg">Unidades</CardTitle>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setEditingUnity(null);
-                    setUnityDialogOpen(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4" /> Nova
-                </Button>
+                {canManageContent && (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setEditingUnity(null);
+                      setUnityDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="w-4 h-4" /> Nova
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="space-y-2">
                 {unitiesLoading &&
@@ -366,7 +400,9 @@ export default function ContentSettingsPage() {
 
                 {!unitiesLoading && unities?.length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    Nenhuma unidade cadastrada. Crie a primeira.
+                    {canManageContent
+                      ? 'Nenhuma unidade cadastrada. Crie a primeira.'
+                      : 'Nenhuma unidade cadastrada.'}
                   </p>
                 )}
 
@@ -389,27 +425,31 @@ export default function ContentSettingsPage() {
                           {unity.description || 'Sem descrição'}
                         </span>
                       </button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="w-8 h-8 shrink-0"
-                        onClick={() => {
-                          setEditingUnity(unity);
-                          setUnityDialogOpen(true);
-                        }}
-                      >
-                        <Pencil className="w-4 h-4" />
-                        <span className="sr-only">Editar {unity.name}</span>
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="w-8 h-8 shrink-0 text-destructive"
-                        onClick={() => setUnityToDelete(unity)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span className="sr-only">Excluir {unity.name}</span>
-                      </Button>
+                      {canManageContent && (
+                        <>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="w-8 h-8 shrink-0"
+                            onClick={() => {
+                              setEditingUnity(unity);
+                              setUnityDialogOpen(true);
+                            }}
+                          >
+                            <Pencil className="w-4 h-4" />
+                            <span className="sr-only">Editar {unity.name}</span>
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="w-8 h-8 shrink-0 text-destructive"
+                            onClick={() => setUnityToDelete(unity)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span className="sr-only">Excluir {unity.name}</span>
+                          </Button>
+                        </>
+                      )}
                     </div>
                   );
                 })}
@@ -423,15 +463,17 @@ export default function ContentSettingsPage() {
                     <CardTitle className="text-lg">Aulas</CardTitle>
                     <p className="text-xs text-muted-foreground truncate">{selectedUnity.name}</p>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setEditingLesson(null);
-                      setLessonDialogOpen(true);
-                    }}
-                  >
-                    <Plus className="w-4 h-4" /> Nova
-                  </Button>
+                  {canManageContent && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setEditingLesson(null);
+                        setLessonDialogOpen(true);
+                      }}
+                    >
+                      <Plus className="w-4 h-4" /> Nova
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {isOrderDirty && (
@@ -472,7 +514,9 @@ export default function ContentSettingsPage() {
 
                   {!lessonsLoading && lessons?.length === 0 && (
                     <p className="text-sm text-muted-foreground">
-                      Nenhuma aula nesta unidade. Crie a primeira.
+                      {canManageContent
+                        ? 'Nenhuma aula nesta unidade. Crie a primeira.'
+                        : 'Nenhuma aula nesta unidade.'}
                     </p>
                   )}
 
@@ -492,6 +536,7 @@ export default function ContentSettingsPage() {
                           position={index + 1}
                           isSelected={lesson.publicId === selectedLessonId}
                           isReordering={reorderMutation.isPending}
+                          canManage={canManageContent}
                           onSelect={() => setLessonSelection(lesson.publicId)}
                           onEdit={() => {
                             setEditingLesson(lesson);
@@ -535,33 +580,40 @@ export default function ContentSettingsPage() {
                     <ClipboardList className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
                     <h3 className="text-lg font-semibold mb-2">Nenhuma aula criada</h3>
                     <p className="text-muted-foreground mb-6">
-                      Crie a primeira aula de {selectedUnity.name} para gerenciar as questões e
-                      alternativas.
+                      {canManageContent
+                        ? `Crie a primeira aula de ${selectedUnity.name} para gerenciar as questões e alternativas.`
+                        : `${selectedUnity.name} ainda não tem aulas. Peça a um administrador para criar a primeira.`}
                     </p>
-                    <Button
-                      onClick={() => {
-                        setEditingLesson(null);
-                        setLessonDialogOpen(true);
-                      }}
-                    >
-                      <Plus className="w-4 h-4 mr-2" /> Criar aula
-                    </Button>
+                    {canManageContent && (
+                      <Button
+                        onClick={() => {
+                          setEditingLesson(null);
+                          setLessonDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" /> Criar aula
+                      </Button>
+                    )}
                   </>
                 ) : (
                   <>
                     <BookOpen className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
                     <h3 className="text-lg font-semibold mb-2">Nenhuma unidade cadastrada</h3>
                     <p className="text-muted-foreground mb-6">
-                      Crie a primeira unidade para começar a configurar as aulas.
+                      {canManageContent
+                        ? 'Crie a primeira unidade para começar a configurar as aulas.'
+                        : 'Peça a um administrador para criar a primeira unidade.'}
                     </p>
-                    <Button
-                      onClick={() => {
-                        setEditingUnity(null);
-                        setUnityDialogOpen(true);
-                      }}
-                    >
-                      <Plus className="w-4 h-4 mr-2" /> Criar unidade
-                    </Button>
+                    {canManageContent && (
+                      <Button
+                        onClick={() => {
+                          setEditingUnity(null);
+                          setUnityDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" /> Criar unidade
+                      </Button>
+                    )}
                   </>
                 )}
               </div>

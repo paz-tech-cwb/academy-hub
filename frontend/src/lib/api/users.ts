@@ -4,7 +4,6 @@ import {
   PaginatedLeaderboard,
   PaginatedUsers,
   UpdateUserInput,
-  UserRole,
 } from '@/types';
 
 export interface AuthCredentials {
@@ -17,7 +16,7 @@ export interface ListUsersParams {
   pageSize?: number;
   search?: string;
   status?: boolean;
-  role?: UserRole;
+  rolePublicId?: string;
 }
 
 export interface ListLeaderboardParams {
@@ -54,7 +53,7 @@ export const usersApi = {
   /**
    * Lista usuários paginados com filtros opcionais (admin).
    *
-   * @param params - Página, tamanho e filtros de username/status/role.
+   * @param params - Página, tamanho e filtros de username/status/função.
    * @returns Lista paginada de usuários.
    */
   listUsers: async (params: ListUsersParams = {}) => {
@@ -78,7 +77,7 @@ export const usersApi = {
   },
 
   /**
-   * Atualiza status e/ou role de um usuário (admin).
+   * Atualiza status e/ou função de um usuário (admin).
    *
    * @param publicId - PublicId do usuário.
    * @param payload - Campos a atualizar.

@@ -12,7 +12,7 @@ namespace domain.Entities
         public int RequiredExperienceToNextLevel => CalculateRequiredNextLevel(Experience);
         public int Level => CalculateLevel(Experience);
         public float LevelPercentage => CalculateLevelPercentage(Experience);
-        public Roles Role { get; set; }
+        public Roles Role { get; set; } = Roles.User;
 
         private int CalculateRequiredNextLevel(long experience)
         {

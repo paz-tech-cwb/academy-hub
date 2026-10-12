@@ -4,6 +4,7 @@ using api.Controllers.Requests;
 using api.Controllers.Responses;
 using application.Dtos;
 using application.UseCases;
+using domain.Constants;
 using domain.Interfaces.Repositories;
 using domain.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -124,7 +125,7 @@ namespace api.Controllers
             return StatusCode((int)result.StatusCode);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Capabilities.ContentRead)]
         [EndpointSummary("Obter árvore admin da aula")]
         [EndpointDescription("Retorna a aula com suas questões e alternativas, incluindo a alternativa correta de cada questão. Uso exclusivo do admin.")]
         [ProducesResponseType<AdminLessonResponse>(StatusCodes.Status200OK)]

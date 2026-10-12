@@ -34,6 +34,7 @@ builder.Services.AddApplication();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddJwt(builder.Configuration);
+builder.Services.AddCapabilityAuthorization();
 builder.Services.AddScalar();
 builder.Services.AddFluentValidationAutoValidation();
 
