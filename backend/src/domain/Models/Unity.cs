@@ -8,6 +8,9 @@ namespace domain.Models
         public required string Name { get; set; }
         public string? Description { get; set; }
 
+        [Column("cover_url")]
+        public string? CoverUrl { get; set; }
+
         public ICollection<Lesson> Lessons { get; set; } = [];
     }
 }

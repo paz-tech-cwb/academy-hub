@@ -55,7 +55,8 @@ create table unities(
     id int primary key auto_increment,
     public_id varchar(36) not null unique,
     name varchar(255) not null unique,
-    description text
+    description text,
+    cover_url varchar(500)
 );
 
 create table certificates(
