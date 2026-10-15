@@ -1,6 +1,8 @@
 using System.Net;
 using application.Dtos;
+using application.Services;
 using domain.Interfaces.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace application.UseCases
 {
@@ -10,7 +12,9 @@ namespace application.UseCases
         IQuestionRepository questionRepository,
         IAlternativeRepository alternativeRepository,
         IAnswerRepository answerRepository,
-        ICertificateRepository certificateRepository)
+        ICertificateRepository certificateRepository,
+        UnityCoverService unityCoverService,
+        ILogger<DeleteUnityUseCase> logger)
     {
         public async Task<UseCaseResult<object>> ExecuteAsync(Guid publicId)
         {
@@ -31,6 +35,16 @@ namespace application.UseCases
             if (lessons.Count > 0) await lessonRepository.DeleteRangeAsync(lessons);
 
             await unityRepository.DeleteAsync(unity);
+
+            try
+            {
+                await unityCoverService.DeleteFileAsync(unity);
+            }
+            catch (Exception ex)
+            {
+                // A unidade já foi removida; uma capa órfã no bucket não deve falhar a exclusão.
+                logger.LogWarning(ex, "Não foi possível apagar a capa {CoverUrl} da unidade {PublicId}.", unity.CoverUrl, unity.PublicId);
+            }
 
             return new();
         }

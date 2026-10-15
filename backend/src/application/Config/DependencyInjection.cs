@@ -28,6 +28,9 @@ namespace application.Config
             services.AddScoped<ImportPlaylistUseCase>();
             services.AddScoped<CreateUnityUseCase>();
             services.AddScoped<DeleteUnityUseCase>();
+            services.AddScoped<UploadUnityCoverUseCase>();
+            services.AddScoped<SetUnityCoverFromUrlUseCase>();
+            services.AddScoped<RemoveUnityCoverUseCase>();
             services.AddScoped<CreateLessonUseCase>();
             services.AddScoped<DeleteLessonUseCase>();
             services.AddScoped<ReorderLessonsUseCase>();
@@ -42,6 +45,7 @@ namespace application.Config
         {
             services.AddScoped<RoleService>();
             services.AddScoped<CapabilityService>();
+            services.AddScoped<UnityCoverService>();
         }
     }
 }

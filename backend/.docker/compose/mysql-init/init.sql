@@ -186,7 +186,7 @@ insert into users(
 
 insert into unities(public_id, name)
 values(
-    UUID(),
+    "4e9d2fd4-c8b2-11f1-bd9e-2214ed7128a8",
     "Teologias Perigosas"
 );
 

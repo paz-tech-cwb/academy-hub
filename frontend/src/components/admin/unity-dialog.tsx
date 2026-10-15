@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,7 +10,9 @@ import { toast } from 'sonner';
 import { unitiesApi } from '@/lib/api/unities';
 import { queryKeys } from '@/lib/query-keys';
 import { getApiErrorMessage } from '@/lib/api/errors';
-import { Unity } from '@/types';
+import { cropImageToBlob } from '@/lib/crop-image';
+import { PendingCover, Unity } from '@/types';
+import { UnityCoverField } from '@/components/admin/unity-cover-field';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +31,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const unitySchema = z.object({
   name: z
@@ -39,6 +43,26 @@ const unitySchema = z.object({
 
 type UnityFormValues = z.infer<typeof unitySchema>;
 
+/** Falha ao aplicar a capa depois de a unidade já ter sido salva. */
+class CoverError extends Error {}
+
+/**
+ * Envia para a API a alteração de capa escolhida no modal.
+ *
+ * @param publicId - PublicId da unidade (já criada ou atualizada).
+ * @param cover - Alteração pendente: arquivo recortado, URL com recorte ou remoção.
+ */
+async function applyCover(publicId: string, cover: PendingCover) {
+  if (cover.kind === 'remove') {
+    await unitiesApi.removeCover(publicId);
+  } else if (cover.kind === 'url') {
+    await unitiesApi.setCoverFromUrl(publicId, cover.url, cover.crop);
+  } else {
+    const { blob, fileName } = await cropImageToBlob(cover.src, cover.crop, cover.mimeType);
+    await unitiesApi.uploadCover(publicId, blob, fileName);
+  }
+}
+
 interface UnityDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,6 +73,8 @@ interface UnityDialogProps {
 export function UnityDialog({ open, onOpenChange, unity }: UnityDialogProps) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const [pendingCover, setPendingCover] = useState<PendingCover | null>(null);
+  const [savedPublicId, setSavedPublicId] = useState<string | null>(unity?.publicId ?? null);
   const isEditing = !!unity;
 
   const form = useForm<UnityFormValues>({
@@ -60,14 +86,31 @@ export function UnityDialog({ open, onOpenChange, unity }: UnityDialogProps) {
   });
 
   const mutation = useMutation({
-    mutationFn: (values: UnityFormValues) => {
+    mutationFn: async (values: UnityFormValues) => {
       const payload = {
         name: values.name,
         description: values.description || null,
       };
-      return isEditing
-        ? unitiesApi.update(unity!.publicId, payload)
-        : unitiesApi.create(payload);
+
+      let publicId = savedPublicId;
+      if (publicId) {
+        await unitiesApi.update(publicId, payload);
+      } else {
+        publicId = (await unitiesApi.create(payload)).publicId;
+        setSavedPublicId(publicId);
+      }
+
+      if (!pendingCover) return;
+      try {
+        await applyCover(publicId, pendingCover);
+      } catch (err) {
+        // A unidade já foi salva: atualiza a lista e mantém o modal aberto para tentar a capa de novo.
+        queryClient.invalidateQueries({ queryKey: queryKeys.unities.all });
+        const reason = axios.isAxiosError(err)
+          ? getApiErrorMessage(err, 'Falha ao salvar a capa.')
+          : (err as Error).message;
+        throw new CoverError(`A unidade foi salva, mas a capa não: ${reason}`);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.unities.all });
@@ -75,7 +118,7 @@ export function UnityDialog({ open, onOpenChange, unity }: UnityDialogProps) {
       onOpenChange(false);
     },
     onError: (err) => {
-      setError(getApiErrorMessage(err, 'Falha ao salvar a unidade.'));
+      setError(err instanceof CoverError ? err.message : getApiErrorMessage(err, 'Falha ao salvar a unidade.'));
     },
   });
 
@@ -85,7 +128,7 @@ export function UnityDialog({ open, onOpenChange, unity }: UnityDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Editar unidade' : 'Nova unidade'}</DialogTitle>
           <DialogDescription>
@@ -120,7 +163,16 @@ export function UnityDialog({ open, onOpenChange, unity }: UnityDialogProps) {
                 </FormItem>
               )}
             />
-            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+            <div className="space-y-2">
+              <Label>Capa</Label>
+              <UnityCoverField
+                currentCoverUrl={unity?.unityCover}
+                value={pendingCover}
+                onChange={setPendingCover}
+                disabled={mutation.isPending}
+              />
+            </div>
+            {error &&<p className="text-sm font-medium text-destructive">{error}</p>}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
                 Cancelar

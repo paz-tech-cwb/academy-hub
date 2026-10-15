@@ -95,13 +95,38 @@ docker compose -f .docker/compose/docker-compose.yaml up -d
 
 This starts MySQL and runs the initialization scripts automatically.
 
-**2. Run the API:**
+**2. Configure the Cloudflare R2 credentials:**
+
+Unit covers are stored in Cloudflare R2. The credentials are read only from environment variables (never from `appsettings`), so set them on your machine before running the API:
+
+| Variable | Description |
+|----------|-------------|
+| `R2_ACCESS_KEY_ID` | Access Key ID of the R2 API token |
+| `R2_SECRET_ACCESS_KEY` | Secret Access Key of the R2 API token |
+
+The token used locally must be scoped **only to the `academy-hub-dev` bucket**. Never use a token with access to the production bucket (`academy-hub`) on a development machine.
+
+```powershell
+# Windows (PowerShell) — persists for the current user; reopen the terminal/IDE afterwards
+[Environment]::SetEnvironmentVariable("R2_ACCESS_KEY_ID", "<access-key-id>", "User")
+[Environment]::SetEnvironmentVariable("R2_SECRET_ACCESS_KEY", "<secret-access-key>", "User")
+```
+
+```bash
+# Linux / macOS
+export R2_ACCESS_KEY_ID="<access-key-id>"
+export R2_SECRET_ACCESS_KEY="<secret-access-key>"
+```
+
+Without these variables the API still starts, but uploading or removing unit covers fails.
+
+**3. Run the API:**
 
 ```bash
 dotnet run --project src/api/api.csproj
 ```
 
-**3. Drop the database:**
+**4. Drop the database:**
 ```bash
 docker compose -f .docker/compose/docker-compose.yaml down -v
 ```

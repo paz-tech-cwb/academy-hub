@@ -40,7 +40,7 @@ export default function HomePage() {
           {isLoading && !unities &&
             Array.from({ length: 6 }).map((_, i) => (
               <Card key={i} variant="interactive" className="group">
-                <Skeleton className="h-49 w-full rounded-none" />
+                <Skeleton className="aspect-video w-full rounded-none" />
                 <CardHeader className="gap-2">
                   <Skeleton className="h-5 w-3/4" />
                   <Skeleton className="h-4 w-full" />
@@ -50,7 +50,7 @@ export default function HomePage() {
 
           {unities?.map((unity) => (
             <Card key={unity.publicId} variant="interactive" className="group">
-              <div className="h-48 bg-muted relative">
+              <div className="aspect-video bg-muted relative">
                 {unity.unityCover ? (
                   <Image
                     src={unity.unityCover}

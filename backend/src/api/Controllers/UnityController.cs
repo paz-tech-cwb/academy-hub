@@ -4,6 +4,8 @@ using application.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using api.Controllers.Requests;
+using domain.Constants;
+using domain.Dtos;
 using domain.Interfaces.Repositories;
 using domain.Models;
 using Microsoft.EntityFrameworkCore;
@@ -13,8 +15,22 @@ namespace api.Controllers;
 [Route("api/unity")]
 [ApiController]
 [Authorize]
-public class UnityController(GetUnitiesUseCase getUnitiesUseCase, GetUnityUseCase getUnityUseCase, CreateUnityUseCase createUnityUseCase, IUnityRepository unityRepository, DeleteUnityUseCase deleteUnityUseCase) : ControllerBase
+public class UnityController(
+    GetUnitiesUseCase getUnitiesUseCase,
+    GetUnityUseCase getUnityUseCase,
+    CreateUnityUseCase createUnityUseCase,
+    IUnityRepository unityRepository,
+    DeleteUnityUseCase deleteUnityUseCase,
+    UploadUnityCoverUseCase uploadUnityCoverUseCase,
+    SetUnityCoverFromUrlUseCase setUnityCoverFromUrlUseCase,
+    RemoveUnityCoverUseCase removeUnityCoverUseCase) : ControllerBase
 {
+    /// <summary>
+    /// Limite do corpo da requisição de upload. Fica acima dos 2 MB da imagem para que arquivos um
+    /// pouco maiores cheguem ao use case e recebam uma mensagem clara, em vez de um 413 sem corpo.
+    /// </summary>
+    private const long UploadRequestLimit = 5 * 1024 * 1024;
+
     [EndpointSummary("Obter lista")]
     [EndpointDescription("Retorna todas as unidades")]
     [ProducesResponseType<List<GetUnitiesResponse>>(StatusCodes.Status200OK)]
@@ -86,6 +102,74 @@ public class UnityController(GetUnitiesUseCase getUnitiesUseCase, GetUnityUseCas
     public async Task<IActionResult> Delete(Guid publicId)
     {
         var result = await deleteUnityUseCase.ExecuteAsync(publicId);
+        return StatusCode((int)result.StatusCode);
+    }
+
+    /// <summary>
+    /// Recebe a imagem de capa já recortada em 16:9 e grava no bucket como capa da unidade.
+    /// </summary>
+    /// <param name="publicId">PublicId da unidade.</param>
+    /// <param name="file">Arquivo PNG, JPG ou WebP de até 2 MB.</param>
+    /// <returns>A nova URL da capa, ou o motivo da recusa.</returns>
+    [Authorize(Policy = Capabilities.ContentManage)]
+    [Tags("Unidades")]
+    [EndpointSummary("Enviar capa da unidade")]
+    [EndpointDescription("Recebe um arquivo PNG, JPG ou WebP de até 2 MB, já na proporção 16:9, e grava no bucket em unities/{publicId}.{ext}, substituindo a capa anterior. Imagens maiores que 1920x1080 são reduzidas. A URL retornada leva ?v= para não reaproveitar o cache da capa anterior.")]
+    [ProducesResponseType<UnityCoverResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<MessageResponse>(StatusCodes.Status400BadRequest, Description = "Arquivo ausente, maior que 2 MB, em formato não aceito ou fora da proporção 16:9.")]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(UploadRequestLimit)]
+    [RequestFormLimits(MultipartBodyLengthLimit = UploadRequestLimit)]
+    [HttpPut("{publicId:guid}/cover")]
+    public async Task<IActionResult> UploadCover(Guid publicId, IFormFile? file)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(new MessageResponse { Message = "Selecione uma imagem para enviar." });
+
+        using var buffer = new MemoryStream();
+        await file.CopyToAsync(buffer);
+
+        var result = await uploadUnityCoverUseCase.ExecuteAsync(publicId, buffer.ToArray());
+        return StatusCode((int)result.StatusCode, result.Content);
+    }
+
+    /// <summary>
+    /// Baixa a imagem de uma URL, recorta na área informada e grava no bucket como capa da unidade.
+    /// </summary>
+    /// <param name="publicId">PublicId da unidade.</param>
+    /// <param name="request">URL da imagem e área de recorte.</param>
+    /// <returns>A nova URL da capa, ou o motivo da recusa.</returns>
+    [Authorize(Policy = Capabilities.ContentManage)]
+    [Tags("Unidades")]
+    [EndpointSummary("Definir capa da unidade (URL)")]
+    [EndpointDescription("A API baixa a imagem (PNG, JPG ou WebP de até 10 MB; endereços internos são recusados), recorta na área informada em pixels da imagem original — que deve estar em 16:9 —, reduz para no máximo 1920x1080 e grava no bucket, substituindo a capa anterior. Se um PNG recortado passar de 2 MB, ele é gravado como WebP.")]
+    [ProducesResponseType<UnityCoverResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<MessageResponse>(StatusCodes.Status400BadRequest, Description = "URL inválida ou inacessível, imagem em formato não aceito, recorte fora da imagem ou fora de 16:9, ou resultado maior que 2 MB.")]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HttpPut("{publicId:guid}/cover/url")]
+    public async Task<IActionResult> SetCoverFromUrl(Guid publicId, [FromBody] SetUnityCoverFromUrlRequest request)
+    {
+        var crop = new ImageCrop(request.CropX, request.CropY, request.CropWidth, request.CropHeight);
+        var result = await setUnityCoverFromUrlUseCase.ExecuteAsync(publicId, new Uri(request.Url), crop);
+        return StatusCode((int)result.StatusCode, result.Content);
+    }
+
+    /// <summary>
+    /// Remove a capa da unidade do bucket e limpa a URL gravada no banco.
+    /// </summary>
+    /// <param name="publicId">PublicId da unidade.</param>
+    /// <returns>204 em caso de sucesso ou 404 se a unidade não existir.</returns>
+    [Authorize(Policy = Capabilities.ContentManage)]
+    [Tags("Unidades")]
+    [EndpointSummary("Remover capa da unidade")]
+    [EndpointDescription("Apaga o arquivo da capa no bucket e deixa a unidade sem capa. Unidades que já não têm capa também retornam 204.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HttpDelete("{publicId:guid}/cover")]
+    public async Task<IActionResult> RemoveCover(Guid publicId)
+    {
+        var result = await removeUnityCoverUseCase.ExecuteAsync(publicId);
         return StatusCode((int)result.StatusCode);
     }
 }

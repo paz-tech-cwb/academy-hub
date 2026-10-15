@@ -171,6 +171,23 @@ export interface CreateUnityInput {
 
 export type UpdateUnityInput = CreateUnityInput;
 
+/** Área de recorte em pixels da imagem original. */
+export interface CoverCrop {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Alteração de capa escolhida no modal da unidade e ainda não enviada.
+ * `src` é uma object URL do arquivo local; o recorte em blob só é gerado ao salvar.
+ */
+export type PendingCover =
+  | { kind: 'file'; src: string; mimeType: string; crop: CoverCrop }
+  | { kind: 'url'; url: string; crop: CoverCrop }
+  | { kind: 'remove' };
+
 export interface CreateLessonInput {
   unityPublicId: string;
   title: string;

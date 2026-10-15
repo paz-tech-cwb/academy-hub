@@ -2,6 +2,7 @@ using domain.Interfaces.Services;
 using domain.Interfaces.Repositories;
 using infra.Repositories;
 using infra.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace infra.Config
@@ -34,6 +35,19 @@ namespace infra.Config
 
         private static void AddServices(IServiceCollection services)
         {
+            services.AddSingleton<IStorageClient>(provider =>
+            {
+                var configuration = provider.GetRequiredService<IConfiguration>();
+                return new R2StorageClient(new R2Settings(
+                    AccountId: configuration["R2:AccountId"] ?? string.Empty,
+                    AccessKeyId: GetEnvironmentVariable("R2_ACCESS_KEY_ID"),
+                    SecretAccessKey: GetEnvironmentVariable("R2_SECRET_ACCESS_KEY"),
+                    BucketName: configuration["R2:BucketName"] ?? string.Empty,
+                    PublicUrl: configuration["R2:PublicUrl"] ?? string.Empty));
+            });
+            services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
+            services.AddHttpClient<IRemoteImageDownloader, RemoteImageDownloader>()
+                .ConfigurePrimaryHttpMessageHandler(RemoteImageDownloader.CreateHandler);
             services.AddScoped<ILessonService, LessonService>();
             services.AddScoped<IAlternativeService, AlternativeService>();
             services.AddScoped<IAnswerService, AnswerService>();
@@ -43,5 +57,13 @@ namespace infra.Config
             services.AddScoped<IUserService, UserService>();
             services.AddSingleton<ICapabilityResolver, CapabilityResolver>();
         }
+
+        /// <summary>
+        /// Lê uma variável de ambiente do processo.
+        /// </summary>
+        /// <param name="name">Nome da variável.</param>
+        /// <returns>O valor da variável, ou string vazia se ela não estiver definida.</returns>
+        private static string GetEnvironmentVariable(string name) =>
+            Environment.GetEnvironmentVariable(name) ?? string.Empty;
     }
 }

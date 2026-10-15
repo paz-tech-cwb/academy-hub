@@ -29,6 +29,11 @@ RUN apt-get update && apt-get install -y \
 # Copy published app from builder
 COPY --from=builder /app/publish .
 
+# Cloudflare R2 (capas das unidades). Os valores são injetados na execução
+# (variáveis do serviço no Render ou do host no docker compose); nunca gravar credenciais na imagem.
+ENV R2_ACCESS_KEY_ID="" \
+    R2_SECRET_ACCESS_KEY=""
+
 # Expose port
 EXPOSE 8080
 

@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { CreateUnityInput, Unity, UnityDetail, UpdateUnityInput } from '@/types';
+import { CoverCrop, CreateUnityInput, Unity, UnityDetail, UpdateUnityInput } from '@/types';
 
 export const unitiesApi = {
   /**
@@ -37,9 +37,12 @@ export const unitiesApi = {
 
   /**
    * Cria uma nova unidade (admin).
+   *
+   * @returns A unidade criada, com o `publicId` gerado.
    */
   create: async (payload: CreateUnityInput) => {
-    await api.post('/api/unity', payload);
+    const { data } = await api.post<Unity>('/api/unity', payload);
+    return data;
   },
 
   /**
@@ -56,5 +59,49 @@ export const unitiesApi = {
    */
   remove: async (publicId: string) => {
     await api.delete(`/api/unity/${publicId}`);
+  },
+
+  /**
+   * Envia a capa da unidade já recortada em 16:9 (PNG, JPG ou WebP de até 2 MB).
+   *
+   * @param publicId - PublicId da unidade.
+   * @param image - Imagem recortada.
+   * @param fileName - Nome do arquivo enviado no multipart.
+   * @returns A nova URL pública da capa.
+   */
+  uploadCover: async (publicId: string, image: Blob, fileName: string) => {
+    const form = new FormData();
+    form.append('file', image, fileName);
+    const { data } = await api.put<{ coverUrl: string }>(`/api/unity/${publicId}/cover`, form);
+    return data;
+  },
+
+  /**
+   * Define a capa a partir de uma imagem da internet. A API baixa, recorta na área
+   * informada e grava no bucket.
+   *
+   * @param publicId - PublicId da unidade.
+   * @param url - URL pública da imagem.
+   * @param crop - Área de recorte em pixels da imagem original.
+   * @returns A nova URL pública da capa.
+   */
+  setCoverFromUrl: async (publicId: string, url: string, crop: CoverCrop) => {
+    const { data } = await api.put<{ coverUrl: string }>(`/api/unity/${publicId}/cover/url`, {
+      url,
+      cropX: crop.x,
+      cropY: crop.y,
+      cropWidth: crop.width,
+      cropHeight: crop.height,
+    });
+    return data;
+  },
+
+  /**
+   * Remove a capa da unidade.
+   *
+   * @param publicId - PublicId da unidade.
+   */
+  removeCover: async (publicId: string) => {
+    await api.delete(`/api/unity/${publicId}/cover`);
   },
 };
