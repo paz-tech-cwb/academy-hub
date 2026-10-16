@@ -15,5 +15,12 @@ namespace domain.Models
         public bool Status { get; set; }
 
         public Roles Role { get; set; }
+
+        [Column("profile_pic_url")]
+        public string? ProfilePicUrl { get; set; }
+
+        public string? Instagram { get; set; }
+
+        public string? Email { get; set; }
     }
 }

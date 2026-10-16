@@ -56,7 +56,9 @@ namespace api.Controllers
                 PublicId = user.PublicId,
                 Experience = user.Experience,
                 Username = user.Username,
-                Role = user.Role
+                Role = user.Role,
+                ProfilePicUrl = user.ProfilePicUrl,
+                Instagram = user.Instagram
             });
         }
 

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using domain.Enums;
 
 namespace domain.Entities
@@ -13,6 +14,12 @@ namespace domain.Entities
         public int Level => CalculateLevel(Experience);
         public float LevelPercentage => CalculateLevelPercentage(Experience);
         public Roles Role { get; set; } = Roles.User;
+
+        [Description("URL pública da foto de perfil do usuário. Nula quando o usuário não tem foto.")]
+        public string? ProfilePicUrl { get; set; }
+
+        [Description("Identificador ou endereço do perfil do usuário no Instagram. Nulo quando não informado.")]
+        public string? Instagram { get; set; }
 
         private int CalculateRequiredNextLevel(long experience)
         {

@@ -48,6 +48,9 @@ create table users(
     experience int not null default 0,
     status boolean default true,
     role int not null default 1,
+    profile_pic_url varchar(500),
+    instagram varchar(255),
+    email varchar(255),
     constraint fk_users_role foreign key (role) references roles(id)
 );
 
