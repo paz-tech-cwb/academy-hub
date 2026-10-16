@@ -4,6 +4,7 @@ import {
   PaginatedLeaderboard,
   PaginatedUsers,
   UpdateUserInput,
+  UserProfile,
 } from '@/types';
 
 export interface AuthCredentials {
@@ -66,6 +67,19 @@ export const usersApi = {
       params,
     });
     return data;
+  },
+
+  /**
+   * Busca o perfil público de um usuário. Não exige autenticação.
+   *
+   * @param username - Username do usuário, como aparece na URL.
+   * @returns O perfil, ou `null` quando o usuário não existe (a API responde 204).
+   */
+  getProfile: async (username: string) => {
+    const { data, status } = await api.get<UserProfile>(
+      `/api/user/${encodeURIComponent(username)}`,
+    );
+    return status === 204 ? null : data;
   },
 
   /**

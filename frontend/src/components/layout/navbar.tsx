@@ -1,9 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth-context';
+import { usersApi } from '@/lib/api/users';
+import { queryKeys } from '@/lib/query-keys';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Drawer,
   DrawerClose,
@@ -13,7 +16,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
-import { LogOut, BookOpen, Award, Settings2, Menu, Sun, Moon, Trophy } from 'lucide-react';
+import { LogOut, BookOpen, Award, Settings2, Menu, Sun, Moon, Trophy, UserRound } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore } from 'react';
@@ -29,6 +32,15 @@ export default function Navbar() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const isDark = mounted && resolvedTheme === 'dark';
 
+  // O token só traz username e função, então a foto vem do perfil público.
+  // A chave é a mesma da página de perfil, que reaproveita o cache.
+  const { data: profile } = useQuery({
+    queryKey: queryKeys.users.profile(user?.username ?? ''),
+    queryFn: () => usersApi.getProfile(user!.username),
+    enabled: !!user,
+  });
+  const profileHref = user ? `/${encodeURIComponent(user.username)}` : '/';
+
   return (
     <nav className="border-b bg-card text-card-foreground sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -41,11 +53,16 @@ export default function Navbar() {
             <div className="flex items-center gap-4 border-l pl-4">
               <div className="flex items-center gap-3">
                 <p className="text-sm font-bold leading-none hidden sm:block">{user.username}</p>
-                <Avatar className="h-9 w-9 border-2 border-primary/20">
-                  <AvatarFallback className="bg-primary/10 text-primary uppercase">
-                    {user.username.substring(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
+                <Link href={profileHref} aria-label="Ver meu perfil" className="rounded-full">
+                  <Avatar className="h-9 w-9 border-2 border-primary/20 transition-colors hover:border-primary">
+                    {profile?.profilePicUrl && (
+                      <AvatarImage src={profile.profilePicUrl} alt={`Foto de ${user.username}`} />
+                    )}
+                    <AvatarFallback className="bg-primary/10 text-primary uppercase">
+                      {user.username.substring(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
 
                 <Drawer swipeDirection="right">
                   <DrawerTrigger render={<Button variant="ghost" size="icon" aria-label="Abrir menu" />}>
@@ -58,6 +75,12 @@ export default function Navbar() {
                     </DrawerHeader>
 
                     <div className="flex flex-col gap-1 p-2">
+                      <DrawerClose
+                        nativeButton={false}
+                        render={<Link href={profileHref} className={menuItemClass} />}
+                      >
+                        <UserRound className="w-4 h-4" /> Meu perfil
+                      </DrawerClose>
                       <DrawerClose
                         nativeButton={false}
                         render={<Link href="/" className={menuItemClass} />}

@@ -5,6 +5,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
 
 import Navbar from '@/components/layout/navbar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -84,7 +85,10 @@ export default function LeaderboardPage() {
                       <Skeleton className="h-6 w-8" />
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-6 w-40" />
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="size-8 shrink-0 rounded-full" />
+                        <Skeleton className="h-6 w-40" />
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Skeleton className="h-6 w-16" />
@@ -101,7 +105,19 @@ export default function LeaderboardPage() {
                       >
                         {entry.position}
                       </TableCell>
-                      <TableCell className="font-medium truncate">{entry.username}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar>
+                            {entry.profilePicUrl && (
+                              <AvatarImage src={entry.profilePicUrl} alt={`Foto de ${entry.username}`} />
+                            )}
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs uppercase">
+                              {entry.username.substring(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="truncate">{entry.username}</span>
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {entry.experience.toLocaleString('pt-BR')} XP
                       </TableCell>

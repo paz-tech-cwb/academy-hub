@@ -51,6 +51,7 @@ create table users(
     profile_pic_url varchar(500),
     instagram varchar(255),
     email varchar(255),
+    about_me text,
     constraint fk_users_role foreign key (role) references roles(id)
 );
 
@@ -149,13 +150,28 @@ insert into users(
     public_id,
     username,
     password,
-    role
+    experience,
+    role,
+    instagram,
+    about_me,
+    profile_pic_url
 ) values (
     UUID(),
     "lucasaguiar",
     "$2a$11$AaHjow/HXXwaP6laCO.c4uyfQ2JPUtR5IzDI4.h61eH0crqtJbfP2",
-    2
-), (
+    1784,
+    2,
+    "_prolud_",
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    "https://avatars.githubusercontent.com/u/163533114?v=4"
+);
+
+insert into users(
+    public_id,
+    username,
+    password,
+    role
+) values (
     UUID(),
     "erielfundador",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
@@ -187,10 +203,11 @@ insert into users(
 
 
 
-insert into unities(public_id, name)
+insert into unities(public_id, name, cover_url)
 values(
     "4e9d2fd4-c8b2-11f1-bd9e-2214ed7128a8",
-    "Teologias Perigosas"
+    "Teologias Perigosas",
+    "https://pub-928c4ebf165a4e05870940ce127e2377.r2.dev/unities/4e9d2fd4-c8b2-11f1-bd9e-2214ed7128a8.png"
 );
 
 insert into lessons(public_id, title, description, sequence, video_url, unity_id)

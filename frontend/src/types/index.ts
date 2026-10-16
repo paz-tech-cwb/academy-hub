@@ -64,6 +64,23 @@ export interface LeaderboardEntry {
   publicId: string;
   username: string;
   experience: number;
+  profilePicUrl: string | null;
+}
+
+/** Dados públicos de um usuário, retornados por `GET /api/user/{username}`. */
+export interface UserProfile {
+  publicId: string;
+  username: string;
+  experience: number;
+  requiredExperienceToNextLevel: number;
+  level: number;
+  /** Progresso dentro do nível atual, de 0 a 100. */
+  levelPercentage: number;
+  role: UserRole;
+  profilePicUrl: string | null;
+  /** Identificador (`@usuario`) ou endereço completo do perfil no Instagram. */
+  instagram: string | null;
+  aboutMe: string | null;
 }
 
 export interface PaginatedLeaderboard {

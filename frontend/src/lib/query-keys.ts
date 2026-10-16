@@ -11,6 +11,10 @@ export const queryKeys = {
     /** Chave de uma página do ranking de XP. */
     list: (page: number, pageSize: number) => ['leaderboard', page, pageSize] as const,
   },
+  users: {
+    /** Chave do perfil público de um usuário. */
+    profile: (username: string) => ['user-profile', username] as const,
+  },
   unities: {
     /** Chave da listagem de todas as unidades. */
     all: ['unities'] as const,

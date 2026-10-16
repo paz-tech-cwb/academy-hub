@@ -21,6 +21,9 @@ namespace domain.Entities
         [Description("Identificador ou endereço do perfil do usuário no Instagram. Nulo quando não informado.")]
         public string? Instagram { get; set; }
 
+        [Description("Texto de apresentação escrito pelo usuário. Nulo quando não informado.")]
+        public string? AboutMe { get; set; }
+
         private int CalculateRequiredNextLevel(long experience)
         {
             int requiredNextLevelValue = 1000;

@@ -22,5 +22,8 @@ namespace domain.Models
         public string? Instagram { get; set; }
 
         public string? Email { get; set; }
+
+        [Column("about_me")]
+        public string? AboutMe { get; set; }
     }
 }

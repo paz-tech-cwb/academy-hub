@@ -58,7 +58,8 @@ namespace api.Controllers
                 Username = user.Username,
                 Role = user.Role,
                 ProfilePicUrl = user.ProfilePicUrl,
-                Instagram = user.Instagram
+                Instagram = user.Instagram,
+                AboutMe = user.AboutMe
             });
         }
 

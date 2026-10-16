@@ -98,7 +98,8 @@ namespace infra.Services
                     Position = offset + index + 1,
                     PublicId = user.PublicId,
                     Username = user.Username,
-                    Experience = user.Experience
+                    Experience = user.Experience,
+                    ProfilePicUrl = user.ProfilePicUrl
                 })
                 .ToList();
 

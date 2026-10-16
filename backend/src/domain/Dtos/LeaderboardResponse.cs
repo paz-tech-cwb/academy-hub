@@ -14,5 +14,8 @@ namespace domain.Dtos
 
         [Description("Quantidade de XP acumulada.")]
         public long Experience { get; set; }
+
+        [Description("URL pública da foto de perfil do usuário. Nula quando o usuário não tem foto.")]
+        public string? ProfilePicUrl { get; set; }
     }
 }
