@@ -8,12 +8,16 @@
  */
 export const queryKeys = {
   leaderboard: {
+    /** Prefixo de todas as páginas do ranking, para invalidar o ranking inteiro. */
+    all: ['leaderboard'] as const,
     /** Chave de uma página do ranking de XP. */
     list: (page: number, pageSize: number) => ['leaderboard', page, pageSize] as const,
   },
   users: {
     /** Chave do perfil público de um usuário. */
     profile: (username: string) => ['user-profile', username] as const,
+    /** Chave dos dados editáveis do próprio perfil (inclui o e-mail). */
+    me: ['me', 'profile'] as const,
   },
   unities: {
     /** Chave da listagem de todas as unidades. */

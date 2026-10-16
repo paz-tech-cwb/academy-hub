@@ -179,6 +179,53 @@ namespace infra.Services
             return true;
         }
 
+        /// <summary>
+        /// Busca os dados editáveis do perfil do próprio usuário.
+        /// </summary>
+        /// <param name="publicId">PublicId do usuário autenticado.</param>
+        /// <returns>Os dados do perfil, ou <c>null</c> se o usuário não existir.</returns>
+        public async Task<MyProfileResponse?> GetOwnProfileAsync(Guid publicId)
+        {
+            var user = await GetUserAsync(publicId);
+            if (user is null) return null;
+
+            return new MyProfileResponse
+            {
+                ProfilePicUrl = user.ProfilePicUrl,
+                AboutMe = user.AboutMe,
+                Instagram = user.Instagram,
+                Email = user.Email
+            };
+        }
+
+        /// <summary>
+        /// Atualiza o "sobre mim", o Instagram e o e-mail do próprio usuário. Valores vazios ficam nulos.
+        /// </summary>
+        /// <param name="publicId">PublicId do usuário autenticado.</param>
+        /// <param name="aboutMe">Texto de apresentação.</param>
+        /// <param name="instagram">Identificador ou endereço do perfil no Instagram.</param>
+        /// <param name="email">E-mail do usuário.</param>
+        /// <returns><c>false</c> se o usuário não existir.</returns>
+        public async Task<bool> UpdateOwnProfileAsync(Guid publicId, string? aboutMe, string? instagram, string? email)
+        {
+            var user = await GetUserAsync(publicId);
+            if (user is null) return false;
+
+            user.AboutMe = EmptyToNull(aboutMe);
+            user.Instagram = EmptyToNull(instagram);
+            user.Email = EmptyToNull(email);
+            await userRepository.UpdateAsync(user);
+            return true;
+        }
+
+        /// <summary>
+        /// Remove espaços nas pontas e converte texto vazio em <c>null</c>.
+        /// </summary>
+        /// <param name="value">Valor informado pelo usuário.</param>
+        /// <returns>O valor sem espaços nas pontas, ou <c>null</c> se ficar vazio.</returns>
+        private static string? EmptyToNull(string? value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
         private async Task<User?> GetUserAsync(Guid publicId)
             => (await userRepository.GetListAsync(u => u.PublicId == publicId)).FirstOrDefault();
     }

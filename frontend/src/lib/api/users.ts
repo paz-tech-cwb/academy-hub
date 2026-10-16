@@ -1,8 +1,11 @@
 import api from '@/lib/axios';
 import {
+  CoverCrop,
   LoginResponse,
+  MyProfile,
   PaginatedLeaderboard,
   PaginatedUsers,
+  UpdateMyProfileInput,
   UpdateUserInput,
   UserProfile,
 } from '@/types';
@@ -80,6 +83,63 @@ export const usersApi = {
       `/api/user/${encodeURIComponent(username)}`,
     );
     return status === 204 ? null : data;
+  },
+
+  /**
+   * Busca os dados editáveis do próprio perfil, incluindo o e-mail.
+   *
+   * @returns Foto, "sobre mim", Instagram e e-mail do usuário autenticado.
+   */
+  getMyProfile: async () => {
+    const { data } = await api.get<MyProfile>('/api/me/profile');
+    return data;
+  },
+
+  /**
+   * Substitui o "sobre mim", o Instagram e o e-mail do próprio usuário. Valores nulos limpam o campo.
+   *
+   * @param payload - Os três campos, sempre enviados juntos.
+   */
+  updateMyProfile: async (payload: UpdateMyProfileInput) => {
+    await api.put('/api/me/profile', payload);
+  },
+
+  /**
+   * Envia a foto de perfil já recortada em quadrado.
+   *
+   * @param image - Imagem recortada.
+   * @param fileName - Nome do arquivo enviado no multipart.
+   * @returns A nova URL pública da foto.
+   */
+  uploadProfilePic: async (image: Blob, fileName: string) => {
+    const form = new FormData();
+    form.append('file', image, fileName);
+    const { data } = await api.put<{ profilePicUrl: string }>('/api/me/profile-pic', form);
+    return data;
+  },
+
+  /**
+   * Define a foto de perfil a partir de uma imagem da internet. A API baixa, recorta na área
+   * informada e grava no bucket.
+   *
+   * @param url - URL pública da imagem.
+   * @param crop - Área de recorte quadrada em pixels da imagem original.
+   * @returns A nova URL pública da foto.
+   */
+  setProfilePicFromUrl: async (url: string, crop: CoverCrop) => {
+    const { data } = await api.put<{ profilePicUrl: string }>('/api/me/profile-pic/url', {
+      url,
+      cropX: crop.x,
+      cropY: crop.y,
+      cropWidth: crop.width,
+      cropHeight: crop.height,
+    });
+    return data;
+  },
+
+  /** Remove a foto de perfil do próprio usuário. */
+  removeProfilePic: async () => {
+    await api.delete('/api/me/profile-pic');
   },
 
   /**

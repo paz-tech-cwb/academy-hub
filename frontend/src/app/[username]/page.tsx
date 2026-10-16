@@ -1,17 +1,20 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { InstagramLogoIcon } from '@phosphor-icons/react';
-import { UserX } from 'lucide-react';
+import { Pencil, UserX } from 'lucide-react';
 
 import Navbar from '@/components/layout/navbar';
+import { EditProfileDialog } from '@/components/profile/edit-profile-dialog';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usersApi } from '@/lib/api/users';
 import { queryKeys } from '@/lib/query-keys';
+import { useAuth } from '@/contexts/auth-context';
 
 /**
  * Monta o link e o texto exibido do Instagram a partir do que o usuário
@@ -37,6 +40,10 @@ function toInstagramLink(value: string) {
 export default function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username: usernameParam } = use(params);
   const username = decodeURIComponent(usernameParam);
+  const { user } = useAuth();
+  const [editing, setEditing] = useState(false);
+  // O username é único sem diferenciar maiúsculas no banco, então a URL pode vir com outra caixa.
+  const isOwnProfile = !!user && user.username.toLowerCase() === username.toLowerCase();
 
   const { data: profile, isLoading, isError } = useQuery({
     queryKey: queryKeys.users.profile(username),
@@ -87,6 +94,13 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
                   </a>
                 )}
               </div>
+
+              {isOwnProfile && profile && (
+                <Button variant="outline" className="sm:ml-auto" onClick={() => setEditing(true)}>
+                  <Pencil className="w-4 h-4" />
+                  Editar perfil
+                </Button>
+              )}
             </header>
 
             <Card>
@@ -146,6 +160,10 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
           </div>
         )}
       </main>
+
+      {editing && user && (
+        <EditProfileDialog open onOpenChange={setEditing} username={user.username} />
+      )}
     </div>
   );
 }

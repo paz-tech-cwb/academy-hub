@@ -83,6 +83,20 @@ export interface UserProfile {
   aboutMe: string | null;
 }
 
+/** Dados editáveis do próprio perfil, retornados por `GET /api/me/profile`. Inclui o e-mail, que não é público. */
+export interface MyProfile {
+  profilePicUrl: string | null;
+  aboutMe: string | null;
+  instagram: string | null;
+  email: string | null;
+}
+
+export interface UpdateMyProfileInput {
+  aboutMe: string | null;
+  instagram: string | null;
+  email: string | null;
+}
+
 export interface PaginatedLeaderboard {
   items: LeaderboardEntry[];
   totalCount: number;
@@ -197,7 +211,7 @@ export interface CoverCrop {
 }
 
 /**
- * Alteração de capa escolhida no modal da unidade e ainda não enviada.
+ * Alteração de imagem (capa da unidade ou foto de perfil) escolhida num modal e ainda não enviada.
  * `src` é uma object URL do arquivo local; o recorte em blob só é gerado ao salvar.
  */
 export type PendingCover =

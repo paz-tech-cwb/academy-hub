@@ -12,5 +12,22 @@ namespace domain.Interfaces.Services
         Task<ChangePasswordResult> ChangeOwnPasswordAsync(Guid publicId, string currentPassword, string newPassword);
         Task<bool> DeactivateUserAsync(Guid publicId);
         Task<bool> UpdateUserAsync(Guid publicId, bool? status, Guid? rolePublicId);
+
+        /// <summary>
+        /// Busca os dados editáveis do perfil do próprio usuário.
+        /// </summary>
+        /// <param name="publicId">PublicId do usuário autenticado.</param>
+        /// <returns>Os dados do perfil, ou <c>null</c> se o usuário não existir.</returns>
+        Task<MyProfileResponse?> GetOwnProfileAsync(Guid publicId);
+
+        /// <summary>
+        /// Atualiza o "sobre mim", o Instagram e o e-mail do próprio usuário. Valores vazios ficam nulos.
+        /// </summary>
+        /// <param name="publicId">PublicId do usuário autenticado.</param>
+        /// <param name="aboutMe">Texto de apresentação.</param>
+        /// <param name="instagram">Identificador ou endereço do perfil no Instagram.</param>
+        /// <param name="email">E-mail do usuário.</param>
+        /// <returns><c>false</c> se o usuário não existir.</returns>
+        Task<bool> UpdateOwnProfileAsync(Guid publicId, string? aboutMe, string? instagram, string? email);
     }
 }

@@ -15,7 +15,6 @@ namespace application.UseCases
         UnityCoverService unityCoverService)
     {
         private const long MaxDownloadBytes = 10 * 1024 * 1024;
-        private const int CropTolerancePixels = 2;
 
         private const string DownloadFailedMessage =
             "Não foi possível baixar a imagem dessa URL. Verifique se o link é público e aponta diretamente para uma imagem PNG, JPG ou WebP de até 10 MB.";
@@ -42,7 +41,7 @@ namespace application.UseCases
             if ((long)info.Width * info.Height > UnityCoverService.MaxPixels)
                 return BadRequest(UnityCoverService.TooManyPixelsMessage);
 
-            var clamped = ClampToImage(crop, info);
+            var clamped = crop.ClampTo(info);
             if (clamped is null) return BadRequest(CropOutOfBoundsMessage);
             if (!UnityCoverService.Is16By9(clamped.Width, clamped.Height))
                 return BadRequest(UnityCoverService.WrongRatioMessage);
@@ -61,28 +60,6 @@ namespace application.UseCases
 
             var coverUrl = await unityCoverService.SaveAsync(unity, processed, format);
             return new() { Content = new UnityCoverResponse { CoverUrl = coverUrl } };
-        }
-
-        /// <summary>
-        /// Ajusta a área de recorte aos limites da imagem, absorvendo diferenças de até 2 pixels
-        /// causadas por arredondamento no front.
-        /// </summary>
-        /// <param name="crop">Área enviada pelo front.</param>
-        /// <param name="info">Dimensões da imagem.</param>
-        /// <returns>A área ajustada, ou <c>null</c> se ela estiver fora da imagem além da tolerância.</returns>
-        private static ImageCrop? ClampToImage(ImageCrop crop, ImageInfo info)
-        {
-            if (crop.Width <= 0 || crop.Height <= 0) return null;
-            if (crop.X < -CropTolerancePixels || crop.Y < -CropTolerancePixels) return null;
-            if (crop.X + crop.Width > info.Width + CropTolerancePixels) return null;
-            if (crop.Y + crop.Height > info.Height + CropTolerancePixels) return null;
-
-            var x = Math.Max(0, crop.X);
-            var y = Math.Max(0, crop.Y);
-            var width = Math.Min(crop.X + crop.Width, info.Width) - x;
-            var height = Math.Min(crop.Y + crop.Height, info.Height) - y;
-
-            return width > 0 && height > 0 ? new ImageCrop(x, y, width, height) : null;
         }
 
         /// <summary>
