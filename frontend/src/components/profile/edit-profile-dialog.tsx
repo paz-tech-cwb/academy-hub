@@ -106,7 +106,7 @@ export function EditProfileDialog({ open, onOpenChange, username }: EditProfileD
           </p>
         ) : (
           <div className="space-y-4">
-            <Skeleton className="size-32 rounded-full" />
+            <Skeleton className="mx-auto size-32 rounded-full" />
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-8 w-full" />
