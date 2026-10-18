@@ -19,8 +19,6 @@ namespace application.Config
             services.AddScoped<GetLessonsUseCase>();
             services.AddScoped<GetLessonUseCase>();
             services.AddScoped<IssueCertificateUseCase>();
-            services.AddScoped<LoginUseCase>();
-            services.AddScoped<RegisterUseCase>();
             services.AddScoped<VerifyAnswersUseCase>();
             services.AddScoped<GetUnitiesUseCase>();
             services.AddScoped<GetUnityUseCase>();
@@ -31,9 +29,6 @@ namespace application.Config
             services.AddScoped<UploadUnityCoverUseCase>();
             services.AddScoped<SetUnityCoverFromUrlUseCase>();
             services.AddScoped<RemoveUnityCoverUseCase>();
-            services.AddScoped<UploadProfilePicUseCase>();
-            services.AddScoped<SetProfilePicFromUrlUseCase>();
-            services.AddScoped<RemoveProfilePicUseCase>();
             services.AddScoped<CreateLessonUseCase>();
             services.AddScoped<DeleteLessonUseCase>();
             services.AddScoped<ReorderLessonsUseCase>();
@@ -50,6 +45,7 @@ namespace application.Config
             services.AddScoped<CapabilityService>();
             services.AddScoped<UnityCoverService>();
             services.AddScoped<ProfilePicService>();
+            services.AddScoped<UserService>();
         }
     }
 }

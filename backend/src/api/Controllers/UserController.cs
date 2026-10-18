@@ -2,11 +2,10 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using api.Controllers.Requests;
 using application.Dtos;
-using application.UseCases;
+using application.Services;
 using domain.Dtos;
 using domain.Entities;
 using domain.Interfaces.Repositories;
-using domain.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static System.Text.Encoding;
@@ -15,7 +14,7 @@ namespace api.Controllers
 {
     [Route("api/user")]
     [ApiController]
-    public class UserController(IUserRepository userRepository, LoginUseCase loginUseCase, RegisterUseCase _useCase, IUserService userService) : ControllerBase
+    public class UserController(IUserRepository userRepository, UserService userService) : ControllerBase
     {   
         [EndpointSummary("Registro")]
         [EndpointDescription("Cria um novo usuário e já devolve o token JWT, permitindo entrar sem um login separado.")]
@@ -25,7 +24,7 @@ namespace api.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<LoginResponseDto>> Register(RegisterRequest registerDto)
         {
-            var result = await _useCase.ExecuteAsync(registerDto.Username, registerDto.Password);
+            var result = await userService.RegisterAsync(registerDto.Username, registerDto.Password);
             return StatusCode((int)result.StatusCode, result.Content);
         }
 
@@ -37,7 +36,7 @@ namespace api.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponseDto>> Login(LoginRequest loginDto)
         {
-            var result = await loginUseCase.ExecuteAsync(loginDto.Username, loginDto.Password);
+            var result = await userService.LoginAsync(loginDto.Username, loginDto.Password);
             return StatusCode((int)result.StatusCode, result.Content);
         }
 

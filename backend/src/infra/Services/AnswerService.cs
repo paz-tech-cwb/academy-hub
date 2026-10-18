@@ -1,3 +1,4 @@
+using application.Services;
 using domain.Dtos.Publics;
 using domain.Dtos;
 using domain.Interfaces.Repositories;
@@ -13,7 +14,8 @@ namespace infra.Services
         IUnityRepository _unityRepository,
         IAnswerRepository _answerRepository,
         IUserRepository _userRepository,
-        IAlternativeRepository _alternativeRepository) : IAnswerService
+        IAlternativeRepository _alternativeRepository,
+        UserService _userService) : IAnswerService
     {
         const int DEFAULT_POINTS = 300;
 
@@ -70,7 +72,7 @@ namespace infra.Services
 
             if (!lastAnswers.Answers.Any(ai => !ai.IsCorrect))
             {
-                await _userRepository.AddExperience(lastAnswers.CurrentPointsWeight, publicUserId);
+                await _userService.AddExperienceAsync(publicUserId, lastAnswers.CurrentPointsWeight);
             }
 
             return lastAnswers;

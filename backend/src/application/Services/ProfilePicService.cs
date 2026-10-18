@@ -1,17 +1,17 @@
 using domain.Enums;
-using domain.Interfaces.Repositories;
 using domain.Interfaces.Services;
 using domain.Models;
 
 namespace application.Services
 {
     /// <summary>
-    /// Regras comuns às fotos de perfil: limites, validação de proporção e gravação no bucket
-    /// em <c>profile-pics/{publicId}.{ext}</c>.
+    /// Regras comuns às fotos de perfil: limites, validação de proporção e gravação do arquivo no
+    /// bucket em <c>profile-pics/{publicId}.{ext}</c>. Não altera o usuário no banco.
     /// </summary>
-    public class ProfilePicService(IStorageClient storageClient, IUserRepository userRepository)
+    public class ProfilePicService(IStorageClient storageClient)
     {
         public const long MaxPicBytes = 2 * 1024 * 1024;
+        public const long MaxDownloadBytes = 10 * 1024 * 1024;
         public const int MaxSize = 512;
         public const long MaxPixels = 40_000_000;
 
@@ -19,6 +19,9 @@ namespace application.Services
         public const string TooLargeMessage = "A imagem deve ter no máximo 2 MB.";
         public const string TooManyPixelsMessage = "A resolução da imagem é grande demais.";
         public const string WrongRatioMessage = "A imagem precisa ser quadrada.";
+        public const string DownloadFailedMessage =
+            "Não foi possível baixar a imagem dessa URL. Verifique se o link é público e aponta diretamente para uma imagem PNG, JPG ou WebP de até 10 MB.";
+        public const string CropOutOfBoundsMessage = "A área de recorte está fora dos limites da imagem.";
 
         private const string Folder = "profile-pics";
         private const double RatioTolerance = 0.01;
@@ -33,13 +36,13 @@ namespace application.Services
             width > 0 && height > 0 && Math.Abs(width - height) <= height * RatioTolerance;
 
         /// <summary>
-        /// Grava a foto no bucket, apaga a foto anterior se ela tinha outra extensão e atualiza
-        /// <c>profile_pic_url</c> do usuário com a nova URL pública versionada.
+        /// Grava a foto no bucket e apaga a foto anterior se ela tinha outra extensão. Quem chama
+        /// é responsável por gravar a URL devolvida no usuário.
         /// </summary>
         /// <param name="user">Usuário que receberá a foto.</param>
         /// <param name="content">Bytes da imagem final.</param>
         /// <param name="format">Formato da imagem, que define a extensão e o content-type.</param>
-        /// <returns>A nova URL pública da foto.</returns>
+        /// <returns>A nova URL pública e versionada da foto.</returns>
         public async Task<string> SaveAsync(User user, byte[] content, ImageFormat format)
         {
             var (extension, contentType) = format switch
@@ -57,25 +60,18 @@ namespace application.Services
             if (previousKey is not null && previousKey != key)
                 await storageClient.DeleteAsync(previousKey);
 
-            user.ProfilePicUrl = $"{storageClient.GetPublicUrl(key)}?v={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-            await userRepository.UpdateAsync(user);
-
-            return user.ProfilePicUrl;
+            return $"{storageClient.GetPublicUrl(key)}?v={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
         }
 
         /// <summary>
-        /// Remove a foto do usuário do bucket e limpa <c>profile_pic_url</c>. Não faz nada se o usuário não tiver foto.
+        /// Apaga do bucket o arquivo da foto atual do usuário. Fotos que são URLs externas não têm
+        /// arquivo para apagar. Quem chama é responsável por limpar <c>profile_pic_url</c>.
         /// </summary>
         /// <param name="user">Usuário cuja foto será removida.</param>
         public async Task RemoveAsync(User user)
         {
-            if (string.IsNullOrWhiteSpace(user.ProfilePicUrl)) return;
-
             var key = GetCurrentKey(user);
             if (key is not null) await storageClient.DeleteAsync(key);
-
-            user.ProfilePicUrl = null;
-            await userRepository.UpdateAsync(user);
         }
 
         /// <summary>

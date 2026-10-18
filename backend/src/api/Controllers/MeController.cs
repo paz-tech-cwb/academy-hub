@@ -1,7 +1,7 @@
 using api.Authorization;
 using api.Controllers.Requests;
 using application.Dtos;
-using application.UseCases;
+using application.Services;
 using domain.Constants;
 using domain.Dtos;
 using domain.Enums;
@@ -17,10 +17,7 @@ namespace api.Controllers
     [Tags("Permissões")]
     public class MeController(
         ICapabilityResolver capabilityResolver,
-        IUserService userService,
-        UploadProfilePicUseCase uploadProfilePicUseCase,
-        SetProfilePicFromUrlUseCase setProfilePicFromUrlUseCase,
-        RemoveProfilePicUseCase removeProfilePicUseCase) : ControllerBase
+        UserService userService) : ControllerBase
     {
         /// <summary>
         /// Limite do corpo da requisição de upload. Fica acima dos 2 MB da imagem para que arquivos um
@@ -139,7 +136,7 @@ namespace api.Controllers
             using var buffer = new MemoryStream();
             await file.CopyToAsync(buffer);
 
-            var result = await uploadProfilePicUseCase.ExecuteAsync(userPublicId, buffer.ToArray());
+            var result = await userService.UploadProfilePicAsync(userPublicId, buffer.ToArray());
             return StatusCode((int)result.StatusCode, result.Content);
         }
 
@@ -161,7 +158,7 @@ namespace api.Controllers
             if (!User.TryGetUserPublicId(out var userPublicId)) return Unauthorized();
 
             var crop = new ImageCrop(request.CropX, request.CropY, request.CropWidth, request.CropHeight);
-            var result = await setProfilePicFromUrlUseCase.ExecuteAsync(userPublicId, new Uri(request.Url), crop);
+            var result = await userService.SetProfilePicFromUrlAsync(userPublicId, new Uri(request.Url), crop);
             return StatusCode((int)result.StatusCode, result.Content);
         }
 
@@ -180,7 +177,7 @@ namespace api.Controllers
         {
             if (!User.TryGetUserPublicId(out var userPublicId)) return Unauthorized();
 
-            var result = await removeProfilePicUseCase.ExecuteAsync(userPublicId);
+            var result = await userService.RemoveProfilePicAsync(userPublicId);
             return StatusCode((int)result.StatusCode);
         }
     }

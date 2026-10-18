@@ -54,7 +54,6 @@ namespace infra.Config
             services.AddScoped<IQuestionService, QuestionService>();
             services.AddScoped<IJwtService, JwtService>();
             services.AddTransient<IPlaylistService, PlaylistService>();
-            services.AddScoped<IUserService, UserService>();
             services.AddSingleton<ICapabilityResolver, CapabilityResolver>();
         }
 
