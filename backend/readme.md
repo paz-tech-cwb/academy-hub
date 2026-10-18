@@ -165,6 +165,16 @@ The initialization scripts in `.docker/compose/` are executed in order when the 
 
 Main tables: `users`, `unities`, `lessons`, `questions`, `alternatives`, `answers`, `certificates`.
 
+### Seed users
+
+For local testing, the admin user `lucasaguiar` created by the seed uses the username as its password:
+
+| Username | Password | Role |
+|----------|----------|------|
+| `lucasaguiar` | `lucasaguiar` | Admin |
+
+Seed users have fixed `public_id` values, so a JWT issued before the database is recreated (e.g. after `docker compose down` / `docker compose up`) keeps working, since the token carries the user's `public_id`. Keep these ids fixed when editing the seed: if they change, previously issued tokens fail with `Entity not found` and the user has to log in again.
+
 ---
 
 ## Tests

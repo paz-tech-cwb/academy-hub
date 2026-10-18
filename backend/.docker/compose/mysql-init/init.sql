@@ -156,7 +156,7 @@ insert into users(
     about_me,
     profile_pic_url
 ) values (
-    UUID(),
+    "7a8e76dc-b3ae-4c84-bbe2-c67a19127bf7",
     "lucasaguiar",
     "$2a$11$AaHjow/HXXwaP6laCO.c4uyfQ2JPUtR5IzDI4.h61eH0crqtJbfP2",
     1784,
@@ -172,27 +172,27 @@ insert into users(
     password,
     role
 ) values (
-    UUID(),
+    "915684cb-b6d4-4bce-a9f2-c7f93d5dcd78",
     "erielfundador",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
     1
 ), (
-    UUID(),
+    "fd471476-5c77-4ba6-a5ec-cf2ea2349af1",
     "jackson",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
     1
 ), (
-    UUID(),
+    "35f011b5-d534-4b49-b7b3-ccb1850532bb",
     "kaucartelli",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
     1
 ), (
-    UUID(),
+    "2f75a4f2-b0c5-4588-be2e-103ea82c4fe2",
     "wollimendes",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
     1
 ), (
-    UUID(),
+    "af241179-32bd-4975-b171-d127ce776d34",
     "danielsouza",
     "$2a$11$jaTx5ZQR2YvUt9OJG22THOKXL5AwOX8PGNfo.81jsdVxhkJ727WoK",
     1
