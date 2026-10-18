@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import { usersApi } from "@/lib/api/users";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { Button } from "@/components/ui/button";
@@ -36,10 +36,14 @@ const registerSchema = z.object({
     .string()
     .min(8, "A senha deve ter pelo menos 8 caracteres")
     .max(16, "A senha deve ter no máximo 16 caracteres"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "As senhas não coincidem",
+  path: ["confirmPassword"],
 });
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -48,15 +52,16 @@ export default function RegisterPage() {
     defaultValues: {
       username: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof registerSchema>) {
+  async function onSubmit({ username, password }: z.infer<typeof registerSchema>) {
     setLoading(true);
     setError(null);
     try {
-      await usersApi.register(values);
-      router.push("/login");
+      const { accessToken } = await usersApi.register({ username, password });
+      await login(accessToken);
     } catch (err) {
       setError(getApiErrorMessage(err, "Ocorreu um erro ao criar a conta"));
     } finally {
@@ -101,6 +106,19 @@ export default function RegisterPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Senha</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirmar senha</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••" {...field} />
                     </FormControl>

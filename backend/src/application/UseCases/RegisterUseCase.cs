@@ -2,14 +2,21 @@ using System.Net;
 using application.Dtos;
 using domain.Enums;
 using domain.Interfaces.Repositories;
+using domain.Interfaces.Services;
 using domain.Models;
 using static BCrypt.Net.BCrypt;
 
 namespace application.UseCases
 {
-    public class RegisterUseCase(IUserRepository userRepository)
+    public class RegisterUseCase(IUserRepository userRepository, IJwtService jwtService)
     {
-        public async Task<UseCaseResult<string>> ExecuteAsync(string username, string password)
+        /// <summary>
+        /// Cria um novo usuário e já gera o token de acesso, para que ele entre sem precisar fazer login.
+        /// </summary>
+        /// <param name="username">Nome de usuário desejado; é normalizado para minúsculas.</param>
+        /// <param name="password">Senha em texto plano, armazenada como hash.</param>
+        /// <returns>201 com o token de acesso, ou 409 quando o username já está em uso.</returns>
+        public async Task<UseCaseResult<LoginResponseDto>> ExecuteAsync(string username, string password)
         {
             var normalizedUsername = username.ToLower();
 
@@ -17,8 +24,8 @@ namespace application.UseCases
 
             if (userAlreadyExists)
                 return Conflict();
-            
-            await userRepository.InsertAsync(new User()
+
+            var user = await userRepository.InsertAsync(new User()
             {
                 Username = normalizedUsername,
                 Password = HashPassword(password),
@@ -26,19 +33,24 @@ namespace application.UseCases
                 Role = Roles.User,
             });
 
-            return Created();
+            return new()
+            {
+                StatusCode = HttpStatusCode.Created,
+                Content = new LoginResponseDto()
+                {
+                    IsLogged = true,
+                    AccessToken = jwtService.GenerateBearerToken(user),
+                    Username = user.Username,
+                    ExpiresIn = jwtService.GetExpirationDate(),
+                    Message = "Usuário criado com sucesso."
+                },
+            };
         }
 
-        private static UseCaseResult<string> Created() => new()
-        {
-            StatusCode = HttpStatusCode.Created,
-            Content = "Usuário criado com sucesso."
-        };
-
-        private static UseCaseResult<string> Conflict() => new()
+        private static UseCaseResult<LoginResponseDto> Conflict() => new()
         {
             StatusCode = HttpStatusCode.Conflict,
-            Content = "Usuário já existe."
+            Content = new() { Message = "Usuário já existe." }
         };
     }
 }

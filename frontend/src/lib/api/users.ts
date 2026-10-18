@@ -49,13 +49,16 @@ export const usersApi = {
   },
 
   /**
-   * Cria um novo usuário na API.
+   * Cria um novo usuário na API. A resposta já traz o token, então não é preciso chamar o login.
    *
    * @param credentials - `username` e `password` para a nova conta.
-   * @returns Mensagem de sucesso retornada pela API.
+   * @returns Dados de autenticação (`accessToken`, `isLogged`, `message`) e o `username`.
    */
   register: async (credentials: AuthCredentials) => {
-    const { data } = await api.post<string>('/api/user/register', credentials);
+    const { data } = await api.post<LoginResponse & { username: string }>(
+      '/api/user/register',
+      credentials,
+    );
     return data;
   },
 

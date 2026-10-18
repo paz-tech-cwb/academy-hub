@@ -18,11 +18,12 @@ namespace api.Controllers
     public class UserController(IUserRepository userRepository, LoginUseCase loginUseCase, RegisterUseCase _useCase, IUserService userService) : ControllerBase
     {   
         [EndpointSummary("Registro")]
-        [EndpointDescription("Cria um novo usuário.")]
-        [ProducesResponseType<string>(StatusCodes.Status201Created)]
+        [EndpointDescription("Cria um novo usuário e já devolve o token JWT, permitindo entrar sem um login separado.")]
+        [ProducesResponseType<LoginResponseDto>(StatusCodes.Status201Created, Description = "Quando o usuário é criado; já devolve o token de acesso.")]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Description = "Quando o username ou a senha são inválidos.")]
+        [ProducesResponseType<LoginResponseDto>(StatusCodes.Status409Conflict, Description = "Quando o username já está em uso.")]
         [HttpPost("register")]
-        public async Task<ActionResult<string>> Register(RegisterRequest registerDto)
+        public async Task<ActionResult<LoginResponseDto>> Register(RegisterRequest registerDto)
         {
             var result = await _useCase.ExecuteAsync(registerDto.Username, registerDto.Password);
             return StatusCode((int)result.StatusCode, result.Content);
