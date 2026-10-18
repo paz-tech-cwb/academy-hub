@@ -86,6 +86,29 @@ function isLessonComplete(
   return questions.every((q) => allAnswersStatus[q.publicId]);
 }
 
+/**
+ * Monta o estado do questionário a partir das últimas respostas que a API
+ * devolve junto com as questões.
+ *
+ * Serve de base para o estado local: assim, ao recarregar a página, as
+ * questões já respondidas voltam com a alternativa marcada e com a indicação
+ * de certo/errado, e as corretas continuam travadas.
+ */
+function getPersistedQuizState(
+  questions: Question[] | undefined,
+): Pick<QuizState, 'selectedAnswers' | 'allAnswersStatus'> {
+  const selectedAnswers: Record<string, string> = {};
+  const allAnswersStatus: Record<string, boolean> = {};
+
+  questions?.forEach((q) => {
+    if (q.lastSelectedAlternativeId === null || q.lastAnswerIsCorrect === null) return;
+    selectedAnswers[q.publicId] = q.lastSelectedAlternativeId;
+    allAnswersStatus[q.publicId] = q.lastAnswerIsCorrect;
+  });
+
+  return { selectedAnswers, allAnswersStatus };
+}
+
 export default function LessonPage() {
   const params = useParams();
   const unityNameParam = params.unityName as string;
@@ -99,7 +122,7 @@ export default function LessonPage() {
 
   const queryClient = useQueryClient();
   const [quiz, dispatch] = useReducer(quizReducer, initialQuizState);
-  const { selectedAnswers, allAnswersStatus, verifyResult } = quiz;
+  const { verifyResult } = quiz;
 
   const { data: lesson, isLoading: lessonLoading } = useQuery({
     queryKey: queryKeys.lessons.detail(unityName, lessonName),
@@ -110,6 +133,11 @@ export default function LessonPage() {
     queryKey: queryKeys.questionnaire.byLesson(unityName, lessonName),
     queryFn: () => questionnaireApi.getByLesson(unityName, lessonName),
   });
+
+  // O que foi selecionado/verificado nesta visita prevalece sobre o que veio da API.
+  const persisted = getPersistedQuizState(questions);
+  const selectedAnswers = { ...persisted.selectedAnswers, ...quiz.selectedAnswers };
+  const allAnswersStatus = { ...persisted.allAnswersStatus, ...quiz.allAnswersStatus };
 
   const verifyMutation = useMutation({
     mutationFn: () => {
@@ -143,6 +171,7 @@ export default function LessonPage() {
   });
 
   const handleAnswerSelect = (questionId: string, alternativeId: string) => {
+    if (allAnswersStatus[questionId]) return;
     dispatch({ type: 'select', questionId, alternativeId });
   };
 
@@ -253,10 +282,10 @@ export default function LessonPage() {
             <div className="max-w-3xl mx-auto space-y-8 pb-12">
               {questions.map((question, qIndex) => {
                 const isCorrect = allAnswersStatus[question.publicId];
-                const isWrong = verifyResult?.answers.find(a => a.publicQuestionId === question.publicId)?.isCorrect === false;
+                const isWrong = allAnswersStatus[question.publicId] === false;
 
                 return (
-                  <Card key={question.publicId} className={`overflow-hidden transition-all ${isWrong ? 'border-destructive/30' : isCorrect ? 'border-success/30' : ''}`}>
+                  <Card key={question.publicId} className={`overflow-hidden transition-all ${isWrong ? 'ring-2 ring-destructive/50' : isCorrect ? 'ring-2 ring-success/50' : ''}`}>
                     <CardHeader className="bg-muted/30">
                       <CardTitle className="text-lg flex gap-3">
                         <span className="text-primary opacity-50">{qIndex + 1}.</span>
@@ -304,7 +333,11 @@ export default function LessonPage() {
                         {verifyResult.message || (lessonComplete ? 'Você acertou todas as questões desta aula!' : 'Algumas respostas estão incorretas. Tente novamente.')}
                       </p>
                       {verifyResult.currentPointsWeight > 0 && (
-                        <p className="mt-2 font-bold text-primary">+{verifyResult.currentPointsWeight} XP</p>
+                        <p className="mt-2 font-bold text-primary">
+                          {lessonComplete
+                            ? `+${verifyResult.currentPointsWeight} XP`
+                            : `Acerte todas para ganhar ${verifyResult.currentPointsWeight} XP`}
+                        </p>
                       )}
                       {verifyResult.wasUnityCorrectlyAnswered && (
                         <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">

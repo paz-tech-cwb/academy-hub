@@ -26,14 +26,15 @@ namespace api.Controllers
         }
 
         [EndpointSummary("Obter lista")]
-        [EndpointDescription("Retorna uma lista de questões e alternativas com base no nome da aula e nome da unidade.")]
+        [EndpointDescription("Retorna uma lista de questões e alternativas com base no nome da aula e nome da unidade. Cada questão traz a última alternativa escolhida pelo usuário autenticado e se ela estava correta; esses campos vêm nulos quando a questão ainda não foi respondida.")]
         [ProducesResponseType<IEnumerable<QuestionDtoResponse>>(StatusCodes.Status200OK, Description = "Retorna a lista de questões daquela aula.")]
         [HttpGet("{unityName}/{lessonName}")]
         public async Task<ActionResult<IEnumerable<QuestionDtoResponse>>> GetList(string unityName, string lessonName)
         {
+            var publicUserId = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
             var decodedUnityName = Uri.UnescapeDataString(unityName);
             var decodedLessonName = Uri.UnescapeDataString(lessonName);
-            var result = await _getQuestionnaireUseCase.ExecuteAsync(decodedUnityName, decodedLessonName);
+            var result = await _getQuestionnaireUseCase.ExecuteAsync(decodedUnityName, decodedLessonName, Guid.Parse(publicUserId));
 
             return StatusCode((int)result.StatusCode, result.Content);
         }

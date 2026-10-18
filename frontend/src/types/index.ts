@@ -138,6 +138,10 @@ export interface Question {
   publicId: string;
   statement: string;
   alternatives: Alternative[];
+  /** Alternativa escolhida na última tentativa do usuário; `null` se a questão nunca foi respondida. */
+  lastSelectedAlternativeId: string | null;
+  /** Se a última resposta do usuário estava correta; `null` se a questão nunca foi respondida. */
+  lastAnswerIsCorrect: boolean | null;
 }
 
 export interface AnswerVerifyRequest {
