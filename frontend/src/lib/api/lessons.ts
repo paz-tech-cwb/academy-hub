@@ -2,7 +2,6 @@ import api from '@/lib/axios';
 import {
   AdminLesson,
   CreateLessonInput,
-  Lesson,
   LessonDetail,
   ReorderLessonsInput,
   UpdateLessonInput,
@@ -13,10 +12,10 @@ export const lessonsApi = {
    * Lista as aulas de uma unidade.
    *
    * @param unityName - Nome da unidade já codificado para uso em URL.
-   * @returns Array de aulas com título e flag de conclusão.
+   * @returns Array de aulas com título, descrição, vídeo, sequência e flag de conclusão.
    */
   listByUnity: async (unityName: string) => {
-    const { data } = await api.get<Lesson[]>(
+    const { data } = await api.get<LessonDetail[]>(
       `/api/lesson/list/${unityName}`,
     );
     return data;

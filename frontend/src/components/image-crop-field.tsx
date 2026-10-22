@@ -46,8 +46,11 @@ interface ImageCropFieldProps {
   /** Imagem atual (ou placeholder) exibida quando não há alteração pendente. */
   preview: ReactNode;
   labels: ImageCropFieldLabels;
-  /** Alinhamento da imagem e dos botões. Padrão: `start`. */
-  align?: 'start' | 'center';
+  /**
+   * Alinhamento da imagem e dos botões. Padrão: `start`. Em `stretch`, os botões abaixo da
+   * imagem dividem igualmente a largura dela.
+   */
+  align?: 'start' | 'center' | 'stretch';
 }
 
 /**
@@ -71,7 +74,10 @@ export function ImageCropField({
   /** Classes do contêiner de cada estado do campo. */
   const rootClass = (spacing: string) => cn(spacing, centered && 'flex w-full flex-col items-center text-center');
   /** Classes das linhas de botões. */
-  const actionsClass = cn('flex flex-wrap gap-2', centered && 'justify-center');
+  const actionsClass =
+    align === 'stretch'
+      ? 'grid auto-cols-fr grid-flow-col gap-2'
+      : cn('flex flex-wrap gap-2', centered && 'justify-center');
   const [choosing, setChoosing] = useState(false);
   const [source, setSource] = useState<ImageSource | null>(null);
   const [urlInput, setUrlInput] = useState('');

@@ -59,7 +59,7 @@ create table unities(
     id int primary key auto_increment,
     public_id varchar(36) not null unique,
     name varchar(255) not null unique,
-    description text,
+    description varchar(500),
     cover_url varchar(500)
 );
 
@@ -77,7 +77,7 @@ create table lessons(
     id int primary key auto_increment,
     public_id varchar(36) not null unique,
     title varchar(100) not null unique,
-    description text,
+    description varchar(500),
     sequence int not null,
     video_url varchar(255) not null,
     unity_id int not null,

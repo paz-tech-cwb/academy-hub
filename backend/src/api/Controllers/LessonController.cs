@@ -32,6 +32,8 @@ namespace api.Controllers
             {
                 PublicId = l.PublicId,
                 Title = l.Title,
+                Description = l.Description,
+                VideoUrl = l.VideoUrl,
                 Sequence = l.Sequence,
                 Concluded = l.Concluded
             }));

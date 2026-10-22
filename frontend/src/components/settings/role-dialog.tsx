@@ -28,13 +28,19 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { CharacterCount } from '@/components/character-count';
+
+const DESCRIPTION_MAX_LENGTH = 255;
 
 const roleSchema = z.object({
   name: z
     .string()
     .min(1, 'Informe o nome da função.')
     .max(50, 'O nome deve ter no máximo 50 caracteres.'),
-  description: z.string().max(255, 'A descrição deve ter no máximo 255 caracteres.'),
+  description: z
+    .string()
+    .max(DESCRIPTION_MAX_LENGTH, `A descrição deve ter no máximo ${DESCRIPTION_MAX_LENGTH} caracteres.`),
 });
 
 type RoleFormValues = z.infer<typeof roleSchema>;
@@ -114,8 +120,14 @@ export function RoleDialog({ open, onOpenChange, role }: RoleDialogProps) {
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Input placeholder="O que essa função faz na plataforma" {...field} />
+                    <Textarea
+                      placeholder="O que essa função faz na plataforma"
+                      className="min-h-20 resize-none"
+                      maxLength={DESCRIPTION_MAX_LENGTH}
+                      {...field}
+                    />
                   </FormControl>
+                  <CharacterCount length={field.value.length} max={DESCRIPTION_MAX_LENGTH} />
                   <FormMessage />
                 </FormItem>
               )}

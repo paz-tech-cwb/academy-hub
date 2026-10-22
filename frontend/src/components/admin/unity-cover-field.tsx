@@ -24,6 +24,7 @@ interface UnityCoverFieldProps {
 export function UnityCoverField({ currentCoverUrl, value, onChange, disabled }: UnityCoverFieldProps) {
   return (
     <ImageCropField
+      align="stretch"
       currentUrl={currentCoverUrl}
       value={value}
       onChange={onChange}

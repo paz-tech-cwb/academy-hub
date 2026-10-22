@@ -1,3 +1,4 @@
+using domain.Constants;
 using FluentValidation;
 
 namespace api.Controllers.Requests.Validators
@@ -11,7 +12,7 @@ namespace api.Controllers.Requests.Validators
                 .MaximumLength(100).WithMessage("O título da aula deve ter no máximo 100 caracteres.");
 
             RuleFor(x => x.Description)
-                .MaximumLength(5000).WithMessage("A descrição deve ter no máximo 5000 caracteres.");
+                .MaximumLength(ContentLimits.DescriptionMaxLength).WithMessage($"A descrição deve ter no máximo {ContentLimits.DescriptionMaxLength} caracteres.");
 
             RuleFor(x => x.VideoUrl)
                 .MaximumLength(255).WithMessage("A URL do vídeo deve ter no máximo 255 caracteres.")
