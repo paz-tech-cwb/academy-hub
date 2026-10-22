@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using api.BackgroundServices;
 using api.Extensions;
 using infra.Config;
 using application.Config;
@@ -47,7 +46,7 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
 builder.Services.AddHealthChecks();
 
 builder.Services.AddHttpClient();
-builder.Services.AddHostedService<FrontendHealthcheckService>();
+builder.Services.AddHangfireJobs();
 
 var app = builder.Build();
 
@@ -71,6 +70,7 @@ app.UseMiddleware<ApiMiddleware>();
 
 app.UseScalar();
 app.UseJwt();
+app.UseHangfireJobs();
 
 app.MapHealthChecks("/api/health");
 
