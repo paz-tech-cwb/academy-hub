@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, Plus } from 'lucide-react';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,8 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useCapabilities } from '@/hooks/use-capabilities';
-import { unitiesApi } from '@/lib/api/unities';
-import { queryKeys } from '@/lib/query-keys';
+import { useContentUnities } from '@/hooks/use-content-unities';
 import { UnityDialog } from '@/components/admin/unity-dialog';
 import { ContentSettingsShell } from '@/components/admin/content-settings-shell';
 
@@ -32,10 +31,7 @@ export default function ContentSettingsPage() {
 
   const [unityDialogOpen, setUnityDialogOpen] = useState(false);
 
-  const { data: unities, isLoading: unitiesLoading } = useQuery({
-    queryKey: queryKeys.unities.all,
-    queryFn: unitiesApi.list,
-  });
+  const { unities, isLoading: unitiesLoading } = useContentUnities();
 
   return (
     <ContentSettingsShell
@@ -57,6 +53,7 @@ export default function ContentSettingsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
+                  <TableHead className="w-28">Situação</TableHead>
                   <TableHead className="w-20 text-right">Editar</TableHead>
                 </TableRow>
               </TableHeader>
@@ -70,12 +67,20 @@ export default function ContentSettingsPage() {
                       <TableCell>
                         <Skeleton className="h-6 w-full" />
                       </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : unities?.length ? (
                   unities.map((unity) => (
                     <TableRow key={unity.publicId}>
                       <TableCell className="font-medium">{unity.name}</TableCell>
+                      <TableCell>
+                        <Badge variant={unity.isActive ? 'default' : 'secondary'}>
+                          {unity.isActive ? 'Ativa' : 'Inativa'}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button size="icon" variant="ghost" className="w-8 h-8" asChild>
                           <Link href={`/settings/content/${unity.publicId}`}>
@@ -88,7 +93,7 @@ export default function ContentSettingsPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={3}className="h-24 text-center text-muted-foreground">
                       {canManageContent
                         ? 'Nenhuma unidade cadastrada. Crie a primeira.'
                         : 'Nenhuma unidade cadastrada. Peça a um administrador para criar a primeira.'}

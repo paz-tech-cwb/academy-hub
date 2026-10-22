@@ -3,12 +3,22 @@ import { CoverCrop, CreateUnityInput, Unity, UnityDetail, UpdateUnityInput } fro
 
 export const unitiesApi = {
   /**
-   * Lista todas as unidades disponíveis para o usuário autenticado.
+   * Lista as unidades ativas, exibidas na home.
    *
    * @returns Array de unidades com nome, descrição e capa.
    */
   list: async () => {
     const { data } = await api.get<Unity[]>('/api/unity');
+    return data;
+  },
+
+  /**
+   * Lista todas as unidades, inclusive as inativas, para a edição de conteúdos.
+   *
+   * @returns Array de unidades com nome, descrição, capa e situação.
+   */
+  listForManagement: async () => {
+    const { data } = await api.get<Unity[]>('/api/unity', { params: { includeInactive: true } });
     return data;
   },
 

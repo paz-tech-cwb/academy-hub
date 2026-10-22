@@ -110,9 +110,11 @@ export interface Unity {
   name: string;
   description: string | null;
   unityCover?: string | null;
+  /** Unidades inativas só aparecem para quem edita conteúdos. */
+  isActive: boolean;
 }
 
-export interface UnityDetail extends Unity {
+export interface UnityDetail extends Omit<Unity, 'isActive'> {
   wasUnityCorrectlyAnswered: boolean;
   wasCertificateAlreadyIssued: boolean;
 }
@@ -127,6 +129,8 @@ export interface Lesson {
 export interface LessonDetail extends Lesson {
   description: string | null;
   videoUrl: string | null;
+  /** Só vem no detalhe da aula; é `false` quando a unidade está inativa e não aceita respostas. */
+  acceptsAnswers?: boolean;
 }
 
 export interface Alternative {
@@ -204,7 +208,9 @@ export interface CreateUnityInput {
   description?: string | null;
 }
 
-export type UpdateUnityInput = CreateUnityInput;
+export interface UpdateUnityInput extends CreateUnityInput {
+  isActive: boolean;
+}
 
 /** Área de recorte em pixels da imagem original. */
 export interface CoverCrop {

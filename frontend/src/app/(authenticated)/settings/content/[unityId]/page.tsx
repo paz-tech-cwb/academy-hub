@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCapabilities } from '@/hooks/use-capabilities';
+import { useContentUnities } from '@/hooks/use-content-unities';
 import { unitiesApi } from '@/lib/api/unities';
 import { lessonsApi } from '@/lib/api/lessons';
 import { queryKeys } from '@/lib/query-keys';
@@ -36,10 +37,7 @@ export default function UnityContentSettingsPage() {
   const [openLessonId, setOpenLessonId] = useState<string | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
-  const { data: unities, isLoading: unitiesLoading } = useQuery({
-    queryKey: queryKeys.unities.all,
-    queryFn: unitiesApi.list,
-  });
+  const { unities, isLoading: unitiesLoading } = useContentUnities();
 
   const unity = unities?.find((item) => item.publicId === unityId) ?? null;
 

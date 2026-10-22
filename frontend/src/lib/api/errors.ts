@@ -1,6 +1,16 @@
 import axios from 'axios';
 
 /**
+ * Indica se o erro é uma resposta 404 da API.
+ *
+ * @param error - Valor lançado pela requisição (tipado como `unknown`).
+ * @returns `true` quando a API respondeu 404.
+ */
+export function isNotFoundError(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 404;
+}
+
+/**
  * Extrai a mensagem de erro de uma resposta da API.
  *
  * Se o erro for um `AxiosError` com payload `{ message }` no body da resposta,

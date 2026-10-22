@@ -60,7 +60,8 @@ create table unities(
     public_id varchar(36) not null unique,
     name varchar(255) not null unique,
     description varchar(500),
-    cover_url varchar(500)
+    cover_url varchar(500),
+    is_active boolean not null default false
 );
 
 create table certificates(

@@ -6,8 +6,10 @@ import { useReducer } from 'react';
 import { lessonsApi } from '@/lib/api/lessons';
 import { questionnaireApi } from '@/lib/api/questionnaire';
 import { queryKeys } from '@/lib/query-keys';
+import { isNotFoundError } from '@/lib/api/errors';
 import { Question, VerifyAnswersResponse } from '@/types';
 import Navbar from '@/components/layout/navbar';
+import { ContentNotFound } from '@/components/content-not-found';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -124,7 +126,11 @@ export default function LessonPage() {
   const [quiz, dispatch] = useReducer(quizReducer, initialQuizState);
   const { verifyResult } = quiz;
 
-  const { data: lesson, isLoading: lessonLoading } = useQuery({
+  const {
+    data: lesson,
+    isLoading: lessonLoading,
+    error: lessonError,
+  } = useQuery({
     queryKey: queryKeys.lessons.detail(unityName, lessonName),
     queryFn: () => lessonsApi.getByName(unityName, lessonName),
   });
@@ -170,8 +176,10 @@ export default function LessonPage() {
     },
   });
 
+  const acceptsAnswers = lesson?.acceptsAnswers !== false;
+
   const handleAnswerSelect = (questionId: string, alternativeId: string) => {
-    if (allAnswersStatus[questionId]) return;
+    if (!acceptsAnswers || allAnswersStatus[questionId]) return;
     dispatch({ type: 'select', questionId, alternativeId });
   };
 
@@ -184,6 +192,8 @@ export default function LessonPage() {
 
   const videoId = getYouTubeId(lesson?.videoUrl || null);
   const lessonComplete = isLessonComplete(questions, allAnswersStatus);
+
+  if (isNotFoundError(lessonError)) return <ContentNotFound title="Aula não encontrada" />;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -297,7 +307,7 @@ export default function LessonPage() {
                         onValueChange={(val) => handleAnswerSelect(question.publicId, val)}
                         value={selectedAnswers[question.publicId] || ''}
                         className="space-y-3"
-                        disabled={isCorrect}
+                        disabled={isCorrect || !acceptsAnswers}
                       >
                         {question.alternatives.map((alt) => (
                           <div
@@ -354,20 +364,32 @@ export default function LessonPage() {
                 </Card>
               )}
 
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={() => verifyMutation.mutate()}
-                  size="lg"
-                  className="w-full sm:w-64 h-14 text-lg rounded-xl shadow-xl shadow-primary/20"
-                  disabled={verifyMutation.isPending || Object.keys(selectedAnswers).filter(id => !allAnswersStatus[id]).length === 0}
-                >
-                  {verifyMutation.isPending ? (
-                    <>Validando <Loader2 className="w-5 h-5 ml-2 animate-spin" /></>
-                  ) : (
-                    <>Enviar Respostas <Send className="w-5 h-5 ml-2" /></>
-                  )}
-                </Button>
-              </div>
+              {acceptsAnswers ? (
+                <div className="flex justify-center pt-4">
+                  <Button
+                    onClick={() => verifyMutation.mutate()}
+                    size="lg"
+                    className="w-full sm:w-64 h-14 text-lg rounded-xl shadow-xl shadow-primary/20"
+                    disabled={verifyMutation.isPending || Object.keys(selectedAnswers).filter(id => !allAnswersStatus[id]).length === 0}
+                  >
+                    {verifyMutation.isPending ? (
+                      <>Validando <Loader2 className="w-5 h-5 ml-2 animate-spin" /></>
+                    ) : (
+                      <>Enviar Respostas <Send className="w-5 h-5 ml-2" /></>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <Card className="bg-muted/30">
+                  <CardContent className="p-6 flex items-start gap-4">
+                    <AlertCircle className="w-6 h-6 text-muted-foreground shrink-0" />
+                    <p className="text-muted-foreground">
+                      Esta unidade está inativa. Você pode ver as questões, mas elas não aceitam respostas
+                      enquanto a unidade não for ativada.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           ) : (
             <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed">

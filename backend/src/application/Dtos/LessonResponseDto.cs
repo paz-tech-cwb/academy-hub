@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace application.Dtos
 {
     public class LessonResponseDto
@@ -8,5 +10,8 @@ namespace application.Dtos
         public string? VideoUrl { get; set; }
         public int Sequence { get; set; }
         public bool Concluded { get; set; }
+
+        [Description("Indica se a aula aceita respostas. É falso quando a unidade da aula está inativa.")]
+        public bool AcceptsAnswers { get; set; }
     }
 }

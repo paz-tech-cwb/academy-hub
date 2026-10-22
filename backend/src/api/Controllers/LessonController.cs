@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using api.Authorization;
 using api.Controllers.Requests;
 using api.Controllers.Responses;
 using application.Dtos;
@@ -17,16 +18,19 @@ namespace api.Controllers
     [ApiController]
     [Authorize]
     [Tags("Aulas")]
-    public class LessonController(GetLessonsUseCase getLessonsUseCase, GetLessonUseCase getLessonUseCase, CreateLessonUseCase createLessonUseCase, ILessonRepository lessonRepository, DeleteLessonUseCase deleteLessonUseCase, ReorderLessonsUseCase reorderLessonsUseCase) : ControllerBase
+    public class LessonController(GetLessonsUseCase getLessonsUseCase, GetLessonUseCase getLessonUseCase, CreateLessonUseCase createLessonUseCase, ILessonRepository lessonRepository, DeleteLessonUseCase deleteLessonUseCase, ReorderLessonsUseCase reorderLessonsUseCase, IAuthorizationService authorizationService) : ControllerBase
     {
         [EndpointSummary("Obter Lista")]
-        [EndpointDescription("Retorna uma lista de aulas com base no nome da unidade")]
+        [EndpointDescription("Retorna uma lista de aulas com base no nome da unidade. Aulas de unidades inativas só são encontradas por quem visualiza conteúdos para edição (content.read) ou gerencia conteúdos (content.manage).")]
+        [ProducesResponseType<List<GetLessonsResponse>>(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Description = "Quando a unidade não existe ou está inativa e o usuário não visualiza nem gerencia conteúdos.")]
         [HttpGet("list/{unityName}")]
         public async Task<ActionResult<List<GetLessonsResponse>>> GetLessonsFromUnity([FromRoute][Required] string unityName)
         {
             var decodedUnityName = Uri.UnescapeDataString(unityName);
             var publicUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
-            var result = await getLessonsUseCase.ExecuteAsync(decodedUnityName, Guid.Parse(publicUserId));
+            var canSeeInactiveContent = await authorizationService.CanSeeInactiveContentAsync(User);
+            var result = await getLessonsUseCase.ExecuteAsync(decodedUnityName, Guid.Parse(publicUserId), canSeeInactiveContent);
 
             return StatusCode((int)result.StatusCode, result.Content?.Select(l => new GetLessonsResponse
             {
@@ -40,16 +44,17 @@ namespace api.Controllers
         }
 
         [EndpointSummary("Obter único")]
-        [EndpointDescription("Retorna uma Lesson baseada no seu PublicId")]
+        [EndpointDescription("Retorna uma aula com base no nome da unidade e no título da aula. Aulas de unidades inativas só são encontradas por quem visualiza conteúdos para edição (content.read) ou gerencia conteúdos (content.manage).")]
         [ProducesResponseType<LessonResponseDto>(StatusCodes.Status200OK, Description = "Quando a aula é encontrada.")]
-        [ProducesResponseType(StatusCodes.Status204NoContent, Description = "Quando a aula não foi encontrada.")]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Description = "Quando a aula não existe ou a unidade dela está inativa e o usuário não visualiza nem gerencia conteúdos.")]
         [HttpGet("{unityName}/{lessonName}")]
         public async Task<ActionResult<LessonResponseDto>> GetLesson(string unityName, string lessonName)
         {
             var decodedUnityName = Uri.UnescapeDataString(unityName);
             var decodedLessonName = Uri.UnescapeDataString(lessonName);
             var publicUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
-            var result = await getLessonUseCase.ExecuteAsync(decodedUnityName, decodedLessonName, Guid.Parse(publicUserId));
+            var canSeeInactiveContent = await authorizationService.CanSeeInactiveContentAsync(User);
+            var result = await getLessonUseCase.ExecuteAsync(decodedUnityName, decodedLessonName, Guid.Parse(publicUserId), canSeeInactiveContent);
 
             return StatusCode((int)result.StatusCode, result.Content);
         }

@@ -14,12 +14,13 @@ namespace infra.Repositories
                 .FirstOrDefaultAsync(l => l.PublicId == publicId);
         }
 
-        public async Task<Lesson?> GetLesson(string unityName, string lessonName)
+        public async Task<Lesson?> GetLesson(string unityName, string lessonName, bool includeInactiveUnity)
         {
             return await context.Lessons
+                .Include(l => l.Unity)
                 .Include(l => l.Questions)
                 .ThenInclude(q => q.Alternatives)
-                .FirstOrDefaultAsync(l => l.Title == lessonName && l.Unity.Name == unityName);
+                .FirstOrDefaultAsync(l => l.Title == lessonName && l.Unity.Name == unityName && (includeInactiveUnity || l.Unity.IsActive));
         }
     }
 }

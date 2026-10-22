@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using api.Authorization;
 using application.UseCases;
 using application.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -23,7 +24,8 @@ public class UnityController(
     DeleteUnityUseCase deleteUnityUseCase,
     UploadUnityCoverUseCase uploadUnityCoverUseCase,
     SetUnityCoverFromUrlUseCase setUnityCoverFromUrlUseCase,
-    RemoveUnityCoverUseCase removeUnityCoverUseCase) : ControllerBase
+    RemoveUnityCoverUseCase removeUnityCoverUseCase,
+    IAuthorizationService authorizationService) : ControllerBase
 {
     /// <summary>
     /// Limite do corpo da requisição de upload. Fica acima dos 2 MB da imagem para que arquivos um
@@ -31,32 +33,42 @@ public class UnityController(
     /// </summary>
     private const long UploadRequestLimit = 5 * 1024 * 1024;
 
+    /// <summary>
+    /// Lista as unidades ativas ou, para quem visualiza ou gerencia conteúdos, todas as unidades.
+    /// </summary>
+    /// <param name="includeInactive">Quando <c>true</c>, inclui as unidades inativas.</param>
+    /// <returns>As unidades encontradas, ou 403 quando o usuário pede as inativas sem permissão.</returns>
     [EndpointSummary("Obter lista")]
-    [EndpointDescription("Retorna todas as unidades")]
+    [EndpointDescription("Retorna as unidades ativas. Com includeInactive=true, retorna também as inativas, o que exige a permissão de visualizar conteúdos para edição (content.read) ou de gerenciar conteúdos (content.manage).")]
     [ProducesResponseType<List<GetUnitiesResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden, Description = "Quando includeInactive=true e o usuário não visualiza nem gerencia conteúdos.")]
     [HttpGet]
-    public async Task<List<GetUnitiesResponse>> GetAll()
+    public async Task<ActionResult<List<GetUnitiesResponse>>> GetAll([FromQuery] bool includeInactive = false)
     {
-        var result = await getUnitiesUseCase.ExecuteAsync();
+        if (includeInactive && !await authorizationService.CanSeeInactiveContentAsync(User))
+            return Forbid();
+
+        var result = await getUnitiesUseCase.ExecuteAsync(includeInactive);
         return result.Content!;
     }
 
     [EndpointSummary("Obter único")]
-    [EndpointDescription("Retorna uma única unidade")]
+    [EndpointDescription("Retorna uma única unidade. Unidades inativas só são encontradas por quem visualiza conteúdos para edição (content.read) ou gerencia conteúdos (content.manage).")]
     [ProducesResponseType<UnityResponseDto>(StatusCodes.Status200OK, Description = "Quando a unidade é encontrada.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent, Description = "Quando a unidade não é encontrada.")]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Description = "Quando a unidade não existe ou está inativa e o usuário não visualiza nem gerencia conteúdos.")]
     [HttpGet("{unityName}")]
     public async Task<ActionResult<UnityResponseDto>> Get(string unityName)
     {
         var decodedUnityName = Uri.UnescapeDataString(unityName);
         var publicUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
-        var result = await getUnityUseCase.ExecuteAsync(decodedUnityName, Guid.Parse(publicUserId));
+        var canSeeInactiveContent = await authorizationService.CanSeeInactiveContentAsync(User);
+        var result = await getUnityUseCase.ExecuteAsync(decodedUnityName, Guid.Parse(publicUserId), canSeeInactiveContent);
         return StatusCode((int)result.StatusCode, result.Content);
     }
 
     [Authorize(Roles = "Admin")]
     [EndpointSummary("Criar unidade")]
-    [EndpointDescription("Valida a unicidade do nome e cria uma nova unidade.")]
+    [EndpointDescription("Valida a unicidade do nome e cria uma nova unidade. A unidade é criada inativa.")]
     [ProducesResponseType<Unity>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [HttpPost]
@@ -68,7 +80,7 @@ public class UnityController(
 
     [Authorize(Roles = "Admin")]
     [EndpointSummary("Atualizar unidade")]
-    [EndpointDescription("Atualiza nome e descrição de uma unidade existente, referenciada pelo publicId.")]
+    [EndpointDescription("Atualiza nome, descrição e situação (ativa ou inativa) de uma unidade existente, referenciada pelo publicId. Unidades inativas, e as aulas delas, deixam de aparecer para quem não visualiza nem gerencia conteúdos.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -80,6 +92,7 @@ public class UnityController(
 
         unity.Name = request.Name;
         unity.Description = request.Description;
+        unity.IsActive = request.IsActive;
 
         try
         {

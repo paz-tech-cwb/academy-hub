@@ -11,6 +11,9 @@ namespace domain.Models
         [Column("cover_url")]
         public string? CoverUrl { get; set; }
 
+        [Column("is_active")]
+        public bool IsActive { get; set; }
+
         public ICollection<Lesson> Lessons { get; set; } = [];
     }
 }

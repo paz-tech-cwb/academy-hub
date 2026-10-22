@@ -22,6 +22,8 @@ export const queryKeys = {
   unities: {
     /** Chave da listagem de todas as unidades. */
     all: ['unities'] as const,
+    /** Chave da listagem usada na edição de conteúdos, que inclui as unidades inativas. */
+    management: ['unities', 'management'] as const,
     /** Chave do detalhe de uma unidade específica. */
     detail: (name: string) => ['unity', name] as const,
   },

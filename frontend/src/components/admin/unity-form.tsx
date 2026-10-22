@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { CharacterCount } from '@/components/character-count';
 
@@ -37,6 +39,7 @@ const unitySchema = z.object({
   description: z
     .string()
     .max(DESCRIPTION_MAX_LENGTH, `A descrição deve ter no máximo ${DESCRIPTION_MAX_LENGTH} caracteres.`),
+  isActive: z.boolean(),
 });
 
 type UnityFormValues = z.infer<typeof unitySchema>;
@@ -73,8 +76,8 @@ interface UnityFormProps {
 }
 
 /**
- * Formulário de nome, descrição e capa de uma unidade. Cria a unidade quando nenhuma é
- * informada e atualiza a existente caso contrário.
+ * Formulário de nome, descrição e capa de uma unidade. Cria a unidade, sempre inativa, quando
+ * nenhuma é informada e atualiza a existente caso contrário, incluindo a situação (ativa ou inativa).
  */
 export function UnityForm({ unity, readOnly = false, onSaved, onCancel }: UnityFormProps) {
   const queryClient = useQueryClient();
@@ -88,6 +91,7 @@ export function UnityForm({ unity, readOnly = false, onSaved, onCancel }: UnityF
     defaultValues: {
       name: unity?.name ?? '',
       description: unity?.description ?? '',
+      isActive: unity?.isActive ?? false,
     },
   });
 
@@ -100,7 +104,7 @@ export function UnityForm({ unity, readOnly = false, onSaved, onCancel }: UnityF
 
       let publicId = savedPublicId;
       if (publicId) {
-        await unitiesApi.update(publicId, payload);
+        await unitiesApi.update(publicId, { ...payload, isActive: values.isActive });
       } else {
         publicId = (await unitiesApi.create(payload)).publicId;
         setSavedPublicId(publicId);
@@ -187,6 +191,29 @@ export function UnityForm({ unity, readOnly = false, onSaved, onCancel }: UnityF
             />
           </div>
         </div>
+        {isEditing ? (
+          <FormField
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between gap-4 rounded-lg border p-3">
+                <div className="space-y-1">
+                  <FormLabel>Unidade ativa</FormLabel>
+                  <FormDescription>
+                    Unidades inativas, e as aulas delas, não aparecem para os alunos.
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} disabled={disabled} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            A unidade é criada inativa. Depois de preparar as aulas, ative-a na edição da unidade.
+          </p>
+        )}
         {error && <p className="text-sm font-medium text-destructive">{error}</p>}
         {!readOnly && (
           <div className="flex justify-end gap-2">

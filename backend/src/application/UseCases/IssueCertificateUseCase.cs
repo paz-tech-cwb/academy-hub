@@ -12,11 +12,18 @@ namespace application.UseCases
         IUserRepository userRepository,
         IUnityRepository unityRepository)
     {
-        public async Task<UseCaseResult<string>> ExecuteAsync(Guid publicUserId, string unityName)
+        /// <summary>
+        /// Emite o certificado da unidade quando o usuário respondeu corretamente todas as questões dela.
+        /// </summary>
+        /// <param name="publicUserId">Id público do usuário autenticado.</param>
+        /// <param name="unityName">Nome da unidade.</param>
+        /// <param name="includeInactive">Quando <c>true</c>, também permite emitir o certificado de unidades inativas.</param>
+        /// <returns>A mensagem de sucesso, ou 400 com o motivo da recusa.</returns>
+        public async Task<UseCaseResult<string>> ExecuteAsync(Guid publicUserId, string unityName, bool includeInactive)
         {
             var result = new UseCaseResult<string>();
 
-            var unity = await unityRepository.GetAsync(u => u.Name == unityName);
+            var unity = await unityRepository.GetAsync(u => u.Name == unityName && (includeInactive || u.IsActive));
             var user = await userRepository.GetAsyncNotNull(u => u.PublicId == publicUserId);
 
             if (unity is null) return new()

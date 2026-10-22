@@ -5,9 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { unitiesApi } from '@/lib/api/unities';
 import { lessonsApi } from '@/lib/api/lessons';
 import { certificatesApi } from '@/lib/api/certificates';
-import { getApiErrorMessage } from '@/lib/api/errors';
+import { getApiErrorMessage, isNotFoundError } from '@/lib/api/errors';
 import { queryKeys } from '@/lib/query-keys';
 import Navbar from '@/components/layout/navbar';
+import { ContentNotFound } from '@/components/content-not-found';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,7 +35,11 @@ export default function UnityPage() {
   const router = useRouter();
   const [issuing, setIssuing] = useState(false);
 
-  const { data: unityDetails, isLoading: unityLoading } = useQuery({
+  const {
+    data: unityDetails,
+    isLoading: unityLoading,
+    error: unityError,
+  } = useQuery({
     queryKey: queryKeys.unities.detail(unityName),
     queryFn: () => unitiesApi.getByName(unityName),
     enabled: !!unityName,
@@ -63,6 +68,8 @@ export default function UnityPage() {
       setIssuing(false);
     }
   };
+
+  if (isNotFoundError(unityError)) return <ContentNotFound title="Unidade não encontrada" />;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
