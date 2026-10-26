@@ -133,6 +133,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-skeleton: var(--skeleton);
   --animate-skeleton-pulse: skeleton-pulse 2s ease-in-out infinite;
+  --animate-quiz-reveal: quiz-reveal 450ms cubic-bezier(0.16, 1, 0.3, 1) both;
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
@@ -182,6 +183,22 @@
 @keyframes skeleton-pulse {
   50% {
     opacity: 0.5;
+  }
+}
+
+@keyframes quiz-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes quiz-reveal {
+    from {
+      opacity: 0;
+    }
   }
 }
 

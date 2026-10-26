@@ -2,18 +2,24 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import { useReducer } from 'react';
+import { useEffect, useEffectEvent, useReducer, useRef } from 'react';
 import { lessonsApi } from '@/lib/api/lessons';
 import { questionnaireApi } from '@/lib/api/questionnaire';
 import { queryKeys } from '@/lib/query-keys';
 import { isNotFoundError } from '@/lib/api/errors';
+import {
+  celebrateLessonCompletion,
+  celebrateUnityCompletion,
+  playAnswerFeedback,
+  prefersReducedMotion,
+} from '@/lib/quiz-feedback';
 import { Question, VerifyAnswersResponse } from '@/types';
 import Navbar from '@/components/layout/navbar';
 import { ContentNotFound } from '@/components/content-not-found';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, PlayCircle, ClipboardList, Send, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, PlayCircle, ClipboardList, Send, Loader2, AlertCircle, XCircle, Trophy } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Breadcrumb,
@@ -27,10 +33,14 @@ import Link from 'next/link';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 
+const XP_COUNT_DURATION_MS = 900;
+
 interface QuizState {
   selectedAnswers: Record<string, string>;
   allAnswersStatus: Record<string, boolean>;
+  verifiedAnswers: Record<string, string>;
   verifyResult: VerifyAnswersResponse | null;
+  attempt: number;
 }
 
 type QuizAction =
@@ -40,7 +50,9 @@ type QuizAction =
 const initialQuizState: QuizState = {
   selectedAnswers: {},
   allAnswersStatus: {},
+  verifiedAnswers: {},
   verifyResult: null,
+  attempt: 0,
 };
 
 /**
@@ -65,10 +77,18 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
     }
     case 'apply-result': {
       const allAnswersStatus = { ...state.allAnswersStatus };
+      const verifiedAnswers = { ...state.verifiedAnswers };
       action.result.answers.forEach((a) => {
         allAnswersStatus[a.publicQuestionId] = a.isCorrect;
+        verifiedAnswers[a.publicQuestionId] = a.publicAlternativeId;
       });
-      return { ...state, verifyResult: action.result, allAnswersStatus };
+      return {
+        ...state,
+        verifyResult: action.result,
+        allAnswersStatus,
+        verifiedAnswers,
+        attempt: state.attempt + 1,
+      };
     }
   }
 }
@@ -98,7 +118,7 @@ function isLessonComplete(
  */
 function getPersistedQuizState(
   questions: Question[] | undefined,
-): Pick<QuizState, 'selectedAnswers' | 'allAnswersStatus'> {
+): Pick<QuizState, 'selectedAnswers' | 'allAnswersStatus' | 'verifiedAnswers'> {
   const selectedAnswers: Record<string, string> = {};
   const allAnswersStatus: Record<string, boolean> = {};
 
@@ -108,7 +128,35 @@ function getPersistedQuizState(
     allAnswersStatus[q.publicId] = q.lastAnswerIsCorrect;
   });
 
-  return { selectedAnswers, allAnswersStatus };
+  return { selectedAnswers, allAnswersStatus, verifiedAnswers: { ...selectedAnswers } };
+}
+
+/**
+ * Exibe o XP ganho contando de zero até o valor final.
+ * Com animações reduzidas, mostra o valor final direto.
+ *
+ * @param value - Quantidade de XP a exibir.
+ */
+function XpCounter({ value }: { value: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element || prefersReducedMotion()) return;
+
+    const start = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / XP_COUNT_DURATION_MS, 1);
+      const eased = 1 - Math.pow(1 - progress, 4);
+      element.textContent = String(Math.round(value * eased));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+
+  return <span ref={ref} className="tabular-nums">{value}</span>;
 }
 
 export default function LessonPage() {
@@ -144,6 +192,10 @@ export default function LessonPage() {
   const persisted = getPersistedQuizState(questions);
   const selectedAnswers = { ...persisted.selectedAnswers, ...quiz.selectedAnswers };
   const allAnswersStatus = { ...persisted.allAnswersStatus, ...quiz.allAnswersStatus };
+  const verifiedAnswers = { ...persisted.verifiedAnswers, ...quiz.verifiedAnswers };
+
+  const questionCardRefs = useRef(new Map<string, HTMLDivElement>());
+  const resultCardRef = useRef<HTMLDivElement>(null);
 
   const verifyMutation = useMutation({
     mutationFn: () => {
@@ -193,6 +245,18 @@ export default function LessonPage() {
   const videoId = getYouTubeId(lesson?.videoUrl || null);
   const lessonComplete = isLessonComplete(questions, allAnswersStatus);
 
+  const playVerifyFeedback = useEffectEvent((result: VerifyAnswersResponse) => {
+    playAnswerFeedback(result.answers, questionCardRefs.current);
+    const resultCard = resultCardRef.current;
+    if (!resultCard || !lessonComplete) return;
+    if (result.wasUnityCorrectlyAnswered) celebrateUnityCompletion(resultCard);
+    else celebrateLessonCompletion(resultCard);
+  });
+
+  useEffect(() => {
+    if (verifyResult) playVerifyFeedback(verifyResult);
+  }, [verifyResult]);
+
   if (isNotFoundError(lessonError)) return <ContentNotFound title="Aula não encontrada" />;
 
   return (
@@ -222,7 +286,11 @@ export default function LessonPage() {
             {lessonLoading && !lesson ? (
               <Skeleton className="h-7 w-28" />
             ) : (
-              <Badge variant={lesson?.concluded ? 'success' : 'secondary'} className="px-4 py-1">
+              <Badge
+                key={String(lesson?.concluded)}
+                variant={lesson?.concluded ? 'success' : 'secondary'}
+                className={`px-4 py-1 ${verifyResult && lesson?.concluded ? 'animate-in zoom-in-75 fade-in-0 duration-500 ease-out motion-reduce:zoom-in-100' : ''}`}
+              >
                 {lesson?.concluded ? 'Concluída' : 'Em andamento'}
               </Badge>
             )}
@@ -293,13 +361,35 @@ export default function LessonPage() {
               {questions.map((question, qIndex) => {
                 const isCorrect = allAnswersStatus[question.publicId];
                 const isWrong = allAnswersStatus[question.publicId] === false;
+                const wasJustVerified = verifyResult?.answers.some((a) => a.publicQuestionId === question.publicId);
+                const verifiedAlternativeId = verifiedAnswers[question.publicId];
+                const canAnswer = !isCorrect && acceptsAnswers;
 
                 return (
-                  <Card key={question.publicId} className={`overflow-hidden transition-all ${isWrong ? 'ring-2 ring-destructive/50' : isCorrect ? 'ring-2 ring-success/50' : ''}`}>
+                  <Card
+                    key={question.publicId}
+                    ref={(element: HTMLDivElement | null) => {
+                      if (element) questionCardRefs.current.set(question.publicId, element);
+                      else questionCardRefs.current.delete(question.publicId);
+                    }}
+                    className={`overflow-hidden transition-shadow duration-300 ${isWrong ? 'ring-2 ring-destructive/50' : isCorrect ? 'ring-2 ring-success/50' : ''}`}
+                  >
                     <CardHeader className="bg-muted/30">
                       <CardTitle className="text-lg flex gap-3">
                         <span className="text-primary opacity-50">{qIndex + 1}.</span>
-                        {question.statement}
+                        <span className="flex-1">{question.statement}</span>
+                        {(isCorrect || isWrong) && (
+                          <span
+                            key={`${question.publicId}-${quiz.attempt}`}
+                            className={wasJustVerified ?'animate-in zoom-in-50 fade-in-0 duration-300 ease-out motion-reduce:zoom-in-100' : ''}
+                          >
+                            {isCorrect ? (
+                              <CheckCircle2 className="w-6 h-6 text-success" role="img" aria-label="Resposta correta" />
+                            ) : (
+                              <XCircle className="w-6 h-6 text-destructive" role="img" aria-label="Resposta incorreta" />
+                            )}
+                          </span>
+                        )}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6">
@@ -312,7 +402,7 @@ export default function LessonPage() {
                         {question.alternatives.map((alt) => (
                           <div
                             key={alt.publicId}
-                            className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors ${selectedAnswers[question.publicId] === alt.publicId ? 'border-primary bg-primary/5' : ''} ${isCorrect ? 'opacity-80' : ''}`}
+                            className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-[color,background-color,border-color,transform,opacity] duration-150 ease-out ${canAnswer ? 'active:scale-[0.99]' : ''} ${isWrong && verifiedAlternativeId === alt.publicId ? 'border-destructive/60 bg-destructive/5' : selectedAnswers[question.publicId] === alt.publicId ? (isCorrect ? 'border-success bg-success/5' : 'border-primary bg-primary/5') : ''} ${isCorrect ? 'opacity-80' : ''}`}
                             onClick={() => handleAnswerSelect(question.publicId, alt.publicId)}
                           >
                             <RadioGroupItem value={alt.publicId} id={alt.publicId} />
@@ -328,7 +418,12 @@ export default function LessonPage() {
               })}
 
               {verifyResult && (
-                <Card className={`border-2 ${lessonComplete ? 'bg-success/5 border-success/20' : 'bg-destructive/5 border-destructive/20'}`}>
+                <Card
+                  key={quiz.attempt}
+                  ref={resultCardRef}
+                  role="status"
+                  className={`border-2 animate-quiz-reveal ${lessonComplete ? 'bg-success/5 border-success/20' : 'bg-destructive/5 border-destructive/20'}`}
+                >
                   <CardContent className="p-6 flex items-start gap-4">
                     {lessonComplete ? (
                       <CheckCircle2 className="w-8 h-8 text-success shrink-0" />
@@ -344,13 +439,16 @@ export default function LessonPage() {
                       </p>
                       {verifyResult.currentPointsWeight > 0 && (
                         <p className="mt-2 font-bold text-primary">
-                          {lessonComplete
-                            ? `+${verifyResult.currentPointsWeight} XP`
-                            : `Acerte todas para ganhar ${verifyResult.currentPointsWeight} XP`}
+                          {lessonComplete ? (
+                            <>+<XpCounter value={verifyResult.currentPointsWeight} /> XP</>
+                          ) : (
+                            `Acerte todas para ganhar ${verifyResult.currentPointsWeight} XP`
+                          )}
                         </p>
                       )}
                       {verifyResult.wasUnityCorrectlyAnswered && (
-                        <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                        <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-3 animate-quiz-reveal [animation-delay:350ms]">
+                          <Trophy className="w-6 h-6 text-primary shrink-0" />
                           <p className="font-semibold text-primary">Parabéns! Você concluiu todas as lições desta unidade!</p>
                         </div>
                       )}
