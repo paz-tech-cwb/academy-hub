@@ -45,9 +45,6 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
 
 builder.Services.AddHealthChecks();
 
-builder.Services.AddHttpClient();
-builder.Services.AddHangfireJobs();
-
 var app = builder.Build();
 
 app.UseCors("AllowNextJs");
@@ -70,7 +67,6 @@ app.UseMiddleware<ApiMiddleware>();
 
 app.UseScalar();
 app.UseJwt();
-app.UseHangfireJobs();
 
 app.MapHealthChecks("/api/health");
 
