@@ -531,7 +531,7 @@ export default function LessonPage() {
                     <CardHeader className="bg-muted/30">
                       <CardTitle className="text-lg flex gap-3">
                         <span className="text-primary tabular-nums">{qIndex + 1}.</span>
-                        <span className="flex-1">{question.statement}</span>
+                        <span id={`question-${question.publicId}`} className="flex-1">{question.statement}</span>
                         {(isCorrect || isWrong) && (
                           <span
                             key={`${question.publicId}-${quiz.attempt}`}
@@ -550,6 +550,7 @@ export default function LessonPage() {
                       <RadioGroup
                         onValueChange={(val) => handleAnswerSelect(question.publicId, val)}
                         value={selectedAnswers[question.publicId] || ''}
+                        aria-labelledby={`question-${question.publicId}`}
                         className="space-y-3"
                         disabled={isCorrect || !acceptsAnswers}
                       >

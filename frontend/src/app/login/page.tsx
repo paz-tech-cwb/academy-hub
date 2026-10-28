@@ -94,25 +94,30 @@ export default function LoginPage() {
                 render={({ field }: { field: ControllerRenderProps<z.infer<typeof loginSchema>, 'password'> }) => (
                   <FormItem>
                     <FormLabel>Senha</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input type={showPassword ? 'text' : 'password'} placeholder="••••••" {...field} />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword((prev) => !prev)}
-                          className="absolute inset-y-0 right-3 flex items-center text-muted-foreground"
-                          tabIndex={-1}
-                        >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                    </FormControl>
+                    <div className="relative">
+                      <FormControl>
+                        <Input
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="••••••"
+                          className="pr-11"
+                          {...field}
+                        />
+                      </FormControl>
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute inset-y-0 right-1 my-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                        aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                      >
+                        {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+                      </button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               {error && (
-                <div className="text-sm font-medium text-destructive">
+                <div role="alert" className="text-sm font-medium text-destructive">
                   {error}
                 </div>
               )}

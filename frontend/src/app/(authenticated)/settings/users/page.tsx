@@ -181,6 +181,7 @@ export default function UsersSettingsPage() {
               <Input
                 type="text"
                 placeholder="Nova senha"
+                aria-label={`Nova senha de ${row.original.username}`}
                 value={editValues.password}
                 onChange={(e) => setEditValues((prev) => ({ ...prev, password: e.target.value }))}
                 className="w-[160px]"
@@ -196,6 +197,7 @@ export default function UsersSettingsPage() {
           cell: ({ row }) =>
             editingId === row.original.publicId ? (
               <Switch
+                aria-label={`${row.original.username} ativo`}
                 checked={editValues.status}
                 onCheckedChange={(checked: boolean) =>
                   setEditValues((prev) => ({ ...prev, status: checked }))
@@ -219,7 +221,7 @@ export default function UsersSettingsPage() {
                   setEditValues((prev) => ({ ...prev, rolePublicId: v }))
                 }
               >
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-[150px]" aria-label={`Função de ${row.original.username}`}>
                   <SelectValue placeholder="Função" />
                 </SelectTrigger>
                 <SelectContent>
@@ -241,17 +243,33 @@ export default function UsersSettingsPage() {
           cell: ({ row }) =>
             editingId === row.original.publicId ? (
               <div className="flex justify-end gap-2">
-                <Button size="sm" variant="ghost" onClick={handleCancel} disabled={isSaving}>
-                  <X className="h-4 w-4" />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                  aria-label={`Cancelar edição de ${row.original.username}`}
+                >
+                  <X className="h-4 w-4" aria-hidden />
                 </Button>
-                <Button size="sm" onClick={() => handleSave(row.original.publicId)} disabled={isSaving}>
-                  <Save className="h-4 w-4" />
+                <Button
+                  size="sm"
+                  onClick={() => handleSave(row.original.publicId)}
+                  disabled={isSaving}
+                  aria-label={`Salvar alterações de ${row.original.username}`}
+                >
+                  <Save className="h-4 w-4" aria-hidden />
                 </Button>
               </div>
             ) : (
               <div className="flex justify-end">
-                <Button size="sm" variant="ghost" onClick={() => handleEdit(row.original)}>
-                  <Pencil className="h-4 w-4" />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleEdit(row.original)}
+                  aria-label={`Editar ${row.original.username}`}
+                >
+                  <Pencil className="h-4 w-4" aria-hidden />
                 </Button>
               </div>
             ),
@@ -306,7 +324,7 @@ export default function UsersSettingsPage() {
               setPagination((prev) => ({ ...prev, pageIndex: 0 }));
             }}
           >
-            <SelectTrigger className="w-full sm:w-[170px]">
+            <SelectTrigger className="w-full sm:w-[170px]" aria-label="Filtrar por status">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -322,7 +340,7 @@ export default function UsersSettingsPage() {
               setPagination((prev) => ({ ...prev, pageIndex: 0 }));
             }}
           >
-            <SelectTrigger className="w-full sm:w-[170px]">
+            <SelectTrigger className="w-full sm:w-[170px]" aria-label="Filtrar por função">
               <SelectValue placeholder="Função" />
             </SelectTrigger>
             <SelectContent>

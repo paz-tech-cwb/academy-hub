@@ -6,6 +6,7 @@ import QueryProvider from "@/components/providers/query-provider";
 import { AuthProvider } from "@/contexts/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { TITLE_TEMPLATE } from "@/lib/metadata";
 
 const jetbrainsMono = JetBrains_Mono({subsets:['latin'],variable:'--font-mono'});
 
@@ -20,7 +21,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Academy Hub",
+  title: {
+    default: "Academy Hub",
+    template: TITLE_TEMPLATE,
+  },
   description: "Treinamentos e Questionários",
 };
 
