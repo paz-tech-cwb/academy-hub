@@ -131,6 +131,14 @@ export interface LessonDetail extends Lesson {
   videoUrl: string | null;
   /** Só vem no detalhe da aula; é `false` quando a unidade está inativa e não aceita respostas. */
   acceptsAnswers?: boolean;
+  /** Só vem no detalhe da aula: XP ganho ao acertar tudo agora; se a aula já foi concluída, é o XP que o usuário ganhou. */
+  currentPointsWeight?: number;
+  /** Só vem no detalhe da aula: XP que a aula vale enquanto o usuário não errou nenhuma resposta. */
+  maxPointsWeight?: number;
+  /** Só vem no detalhe da aula: XP descontado do prêmio a cada resposta errada. */
+  pointsLostPerWrongAnswer?: number;
+  /** Só vem no detalhe da aula: XP mínimo que a aula vale, por mais erros que o usuário tenha. */
+  minPointsWeight?: number;
 }
 
 export interface Alternative {

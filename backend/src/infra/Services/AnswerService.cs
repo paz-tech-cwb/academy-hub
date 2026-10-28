@@ -1,4 +1,5 @@
 using application.Services;
+using domain.Constants;
 using domain.Dtos.Publics;
 using domain.Dtos;
 using domain.Interfaces.Repositories;
@@ -17,8 +18,6 @@ namespace infra.Services
         IAlternativeRepository _alternativeRepository,
         UserService _userService) : IAnswerService
     {
-        const int DEFAULT_POINTS = 300;
-
         private async Task<List<Answer>> GetAnswersByUserAndLesson(Guid publicUserId, Guid publicLessonId)
         {
             return await _context.Answers
@@ -104,13 +103,10 @@ namespace infra.Services
         private static int CalculatePoints(List<Answer> userAnswers)
         {
             int qtdErros = userAnswers.Count(ua => !ua.IsCorrect);
-            int pontosPerdidos = qtdErros * 50;
-            int points = DEFAULT_POINTS - pontosPerdidos;
+            int pontosPerdidos = qtdErros * LessonPoints.LostPerWrongAnswer;
+            int points = LessonPoints.Max - pontosPerdidos;
 
-            if (points <= 0)
-            {
-                points = 50;
-            }
+            if (points <= 0) points = LessonPoints.Min;
 
             return points;
         }

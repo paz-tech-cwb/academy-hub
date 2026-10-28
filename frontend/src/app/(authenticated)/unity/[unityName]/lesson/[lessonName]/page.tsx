@@ -13,13 +13,13 @@ import {
   playAnswerFeedback,
   prefersReducedMotion,
 } from '@/lib/quiz-feedback';
-import { Question, VerifyAnswersResponse } from '@/types';
+import { Lesson, Question, VerifyAnswersResponse } from '@/types';
 import Navbar from '@/components/layout/navbar';
 import { ContentNotFound } from '@/components/content-not-found';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, PlayCircle, ClipboardList, Send, Loader2, AlertCircle, XCircle, Trophy } from 'lucide-react';
+import { CheckCircle2, PlayCircle, ClipboardList, Send, Loader2, AlertCircle, XCircle, Trophy, Zap, ArrowRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Breadcrumb,
@@ -40,18 +40,21 @@ interface QuizState {
   allAnswersStatus: Record<string, boolean>;
   verifiedAnswers: Record<string, string>;
   verifyResult: VerifyAnswersResponse | null;
+  /** XP que a aula valia antes do último envio, para mostrar quanto foi perdido nele. */
+  pointsBeforeAttempt: number | null;
   attempt: number;
 }
 
 type QuizAction =
   | { type: 'select'; questionId: string; alternativeId: string }
-  | { type: 'apply-result'; result: VerifyAnswersResponse };
+  | { type: 'apply-result'; result: VerifyAnswersResponse; pointsBefore: number | null };
 
 const initialQuizState: QuizState = {
   selectedAnswers: {},
   allAnswersStatus: {},
   verifiedAnswers: {},
   verifyResult: null,
+  pointsBeforeAttempt: null,
   attempt: 0,
 };
 
@@ -85,6 +88,7 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
       return {
         ...state,
         verifyResult: action.result,
+        pointsBeforeAttempt: action.pointsBefore,
         allAnswersStatus,
         verifiedAnswers,
         attempt: state.attempt + 1,
@@ -159,6 +163,126 @@ function XpCounter({ value }: { value: number }) {
   return <span ref={ref} className="tabular-nums">{value}</span>;
 }
 
+interface LessonXpPanelProps {
+  currentPoints: number;
+  maxPoints: number;
+  pointsLostPerWrongAnswer: number;
+  minPoints: number;
+  completed: boolean;
+  /** XP perdido no último envio; aparece ao lado do valor enquanto a aula não foi concluída. */
+  lastLoss: number;
+  attempt: number;
+}
+
+/**
+ * Mostra, antes e durante o questionário, quanto XP a aula vale e como os erros reduzem esse valor.
+ * Depois da conclusão, mostra o XP que o usuário ganhou na aula.
+ */
+function LessonXpPanel({
+  currentPoints,
+  maxPoints,
+  pointsLostPerWrongAnswer,
+  minPoints,
+  completed,
+  lastLoss,
+  attempt,
+}: LessonXpPanelProps) {
+  const lostPoints = maxPoints - currentPoints;
+  const fillPercentage = Math.round((currentPoints / maxPoints) * 100);
+
+  const title = completed
+    ? `Você ganhou ${currentPoints} XP nesta aula`
+    : lostPoints > 0
+      ? `Esta aula vale agora ${currentPoints} XP`
+      : `Esta aula vale ${currentPoints} XP`;
+
+  const description = completed
+    ? 'Os pontos já foram somados ao seu perfil.'
+    : currentPoints <= minPoints
+      ? `O prêmio chegou ao mínimo de ${minPoints} XP: novos erros não tiram mais pontos.`
+      : lostPoints > 0
+        ? `Você perdeu ${lostPoints} XP com respostas erradas. Cada novo erro tira mais ${pointsLostPerWrongAnswer} XP, até o mínimo de ${minPoints} XP.`
+        : `Acerte todas as questões para ganhar os ${maxPoints} XP. Cada resposta errada tira ${pointsLostPerWrongAnswer} XP do prêmio, até o mínimo de ${minPoints} XP.`;
+
+  return (
+    <div
+      className={`rounded-2xl border p-5 sm:p-6 ${completed ? 'border-success/30 bg-success/5' : 'border-primary/20 bg-primary/5'}`}
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${completed ? 'bg-success/15 text-success' : 'bg-primary/10 text-primary'}`}
+        >
+          <Zap className="size-6" aria-hidden />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-xl font-bold tracking-tight">{title}</span>
+            {!completed && lastLoss > 0 && (
+              <span
+                key={attempt}
+                className="text-sm font-semibold text-destructive tabular-nums animate-in fade-in-0 slide-in-from-bottom-2 duration-500 ease-out motion-reduce:slide-in-from-bottom-0"
+              >
+                −{lastLoss} XP
+              </span>
+            )}
+          </p>
+          <p className="mt-1 text-base text-muted-foreground text-pretty">{description}</p>
+          <div
+            className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-muted"
+            role="meter"
+            aria-label="XP que a aula vale"
+            aria-valuemin={0}
+            aria-valuemax={maxPoints}
+            aria-valuenow={currentPoints}
+            aria-valuetext={`${currentPoints} de ${maxPoints} XP`}
+          >
+            <div
+              className={`h-full rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none ${completed ? 'bg-success' : 'bg-primary'}`}
+              style={{ width: `${fillPercentage}%` }}
+            />
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground tabular-nums">
+            {currentPoints} de {maxPoints} XP
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface LessonNavigationProps {
+  unityPath: string;
+  nextLesson: Lesson | undefined;
+}
+
+/**
+ * Leva o usuário para a próxima aula da unidade ou de volta para a unidade.
+ * Sem próxima aula, voltar para a unidade passa a ser a ação principal.
+ */
+function LessonNavigation({ unityPath, nextLesson }: LessonNavigationProps) {
+  return (
+    <div className="space-y-3">
+      {nextLesson && (
+        <p className="text-sm text-muted-foreground">
+          A seguir: <span className="font-medium text-foreground">{nextLesson.title}</span>
+        </p>
+      )}
+      <div className="flex flex-col-reverse gap-3 sm:flex-row">
+        <Button asChild size="lg" variant={nextLesson ? 'outline' : 'default'}>
+          <Link href={unityPath}>Voltar para a unidade</Link>
+        </Button>
+        {nextLesson && (
+          <Button asChild size="lg">
+            <Link href={`${unityPath}/lesson/${encodeURIComponent(nextLesson.title)}`}>
+              Próxima aula <ArrowRight />
+            </Link>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function LessonPage() {
   const params = useParams();
   const unityNameParam = params.unityName as string;
@@ -188,11 +312,26 @@ export default function LessonPage() {
     queryFn: () => questionnaireApi.getByLesson(unityName, lessonName),
   });
 
+  const { data: unityLessons } = useQuery({
+    queryKey: queryKeys.lessons.list(unityName),
+    queryFn: () => lessonsApi.listByUnity(unityName),
+  });
+
   // O que foi selecionado/verificado nesta visita prevalece sobre o que veio da API.
   const persisted = getPersistedQuizState(questions);
   const selectedAnswers = { ...persisted.selectedAnswers, ...quiz.selectedAnswers };
   const allAnswersStatus = { ...persisted.allAnswersStatus, ...quiz.allAnswersStatus };
   const verifiedAnswers = { ...persisted.verifiedAnswers, ...quiz.verifiedAnswers };
+
+  const currentPoints = verifyResult?.currentPointsWeight ?? lesson?.currentPointsWeight;
+  const lastLoss =
+    verifyResult && quiz.pointsBeforeAttempt !== null
+      ? Math.max(quiz.pointsBeforeAttempt - verifyResult.currentPointsWeight, 0)
+      : 0;
+
+  const currentLessonIndex = unityLessons?.findIndex((l) => l.publicId === lesson?.publicId) ?? -1;
+  const nextLesson = currentLessonIndex >= 0 ? unityLessons?.[currentLessonIndex + 1] : undefined;
+  const unityPath = `/unity/${unityNameParam}`;
 
   const questionCardRefs = useRef(new Map<string, HTMLDivElement>());
   const resultCardRef = useRef<HTMLDivElement>(null);
@@ -213,7 +352,7 @@ export default function LessonPage() {
       });
     },
     onSuccess: (data) => {
-      dispatch({ type: 'apply-result', result: data });
+      dispatch({ type: 'apply-result', result: data, pointsBefore: currentPoints ?? null });
 
       const nextStatus = { ...allAnswersStatus };
       data.answers.forEach((a) => {
@@ -358,6 +497,21 @@ export default function LessonPage() {
             </div>
           ) : questions && questions.length > 0 ? (
             <div className="max-w-3xl mx-auto space-y-8 pb-12">
+              {acceptsAnswers &&
+                currentPoints !== undefined &&
+                lesson?.maxPointsWeight !== undefined &&
+                lesson.pointsLostPerWrongAnswer !== undefined &&
+                lesson.minPointsWeight !== undefined && (
+                  <LessonXpPanel
+                    currentPoints={currentPoints}
+                    maxPoints={lesson.maxPointsWeight}
+                    pointsLostPerWrongAnswer={lesson.pointsLostPerWrongAnswer}
+                    minPoints={lesson.minPointsWeight}
+                    completed={lessonComplete}
+                    lastLoss={lastLoss}
+                    attempt={quiz.attempt}
+                  />
+                )}
               {questions.map((question, qIndex) => {
                 const isCorrect = allAnswersStatus[question.publicId];
                 const isWrong = allAnswersStatus[question.publicId] === false;
@@ -424,45 +578,61 @@ export default function LessonPage() {
                   role="status"
                   className={`border-2 animate-quiz-reveal ${lessonComplete ? 'bg-success/5 border-success/20' : 'bg-destructive/5 border-destructive/20'}`}
                 >
-                  <CardContent className="p-6 flex items-start gap-4">
-                    {lessonComplete ? (
-                      <CheckCircle2 className="w-8 h-8 text-success shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-8 h-8 text-destructive shrink-0" />
-                    )}
-                    <div>
-                      <h4 className="text-xl font-bold mb-1">
-                        {lessonComplete ? 'Excelente!' : 'Ainda não foi dessa vez'}
-                      </h4>
+                  {lessonComplete ? (
+                    <CardContent className="p-6 sm:p-8 flex flex-col items-center gap-2 text-center">
+                      <CheckCircle2 className="size-10 text-success" aria-hidden />
+                      <h4 className="text-2xl font-bold tracking-tight">Excelente!</h4>
                       <p className="text-base text-muted-foreground">
-                        {verifyResult.message || (lessonComplete ? 'Você acertou todas as questões desta aula!' : 'Algumas respostas estão incorretas. Tente novamente.')}
+                        {verifyResult.message || 'Você acertou todas as questões desta aula.'}
                       </p>
                       {verifyResult.currentPointsWeight > 0 && (
-                        <p className="mt-2 font-bold text-primary">
-                          {lessonComplete ? (
-                            <>+<XpCounter value={verifyResult.currentPointsWeight} /> XP</>
-                          ) : (
-                            `Acerte todas para ganhar ${verifyResult.currentPointsWeight} XP`
-                          )}
+                        <p className="mt-2 text-5xl font-bold tracking-tight text-primary animate-in zoom-in-50 fade-in-0 duration-500 ease-out fill-mode-both [animation-delay:150ms] motion-reduce:zoom-in-100">
+                          +<XpCounter value={verifyResult.currentPointsWeight} /> XP
                         </p>
                       )}
                       {verifyResult.wasUnityCorrectlyAnswered && (
-                        <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-3 animate-quiz-reveal [animation-delay:350ms]">
-                          <Trophy className="w-6 h-6 text-primary shrink-0" />
-                          <p className="font-semibold text-primary">Parabéns! Você concluiu todas as lições desta unidade!</p>
+                        <div className="mt-4 w-full p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-center gap-3 animate-quiz-reveal [animation-delay:350ms]">
+                          <Trophy className="w-6 h-6 text-primary shrink-0" aria-hidden />
+                          <p className="font-semibold text-primary">Parabéns! Você concluiu todas as aulas desta unidade!</p>
                         </div>
                       )}
-                      {lessonComplete && (
-                        <Button asChild className="mt-4" variant="outline">
-                          <Link href={`/unity/${unityNameParam}`}>Voltar para Unidade</Link>
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
+                      <div className="mt-6 animate-quiz-reveal [animation-delay:500ms]">
+                        <LessonNavigation unityPath={unityPath} nextLesson={nextLesson} />
+                      </div>
+                    </CardContent>
+                  ) : (
+                    <CardContent className="p-6 flex items-start gap-4">
+                      <AlertCircle className="w-8 h-8 text-destructive shrink-0" aria-hidden />
+                      <div>
+                        <h4 className="text-xl font-bold mb-1">Ainda não foi dessa vez</h4>
+                        <p className="text-base text-muted-foreground">
+                          {verifyResult.message || 'Algumas respostas estão incorretas. Tente novamente.'}
+                        </p>
+                        {verifyResult.currentPointsWeight > 0 && (
+                          <p className="mt-2 font-semibold">
+                            {lastLoss > 0 && (
+                              <span className="text-destructive">Você perdeu {lastLoss} XP. </span>
+                            )}
+                            <span className="text-primary">
+                              {lastLoss > 0
+                                ? `Acerte todas para ganhar os ${verifyResult.currentPointsWeight} XP que restam.`
+                                : `Acerte todas para ganhar ${verifyResult.currentPointsWeight} XP.`}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  )}
                 </Card>
               )}
 
-              {acceptsAnswers ? (
+              {acceptsAnswers && lessonComplete ? (
+                !verifyResult && (
+                  <div className="flex justify-center pt-4">
+                    <LessonNavigation unityPath={unityPath} nextLesson={nextLesson} />
+                  </div>
+                )
+              ) : acceptsAnswers ? (
                 <div className="flex justify-center pt-4">
                   <Button
                     onClick={() => verifyMutation.mutate()}
