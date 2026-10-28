@@ -2,6 +2,7 @@ using api.Authorization;
 using api.Controllers.Requests;
 using application.Dtos;
 using application.Services;
+using application.UseCases;
 using domain.Constants;
 using domain.Dtos;
 using domain.Enums;
@@ -17,7 +18,8 @@ namespace api.Controllers
     [Tags("Permissões")]
     public class MeController(
         ICapabilityResolver capabilityResolver,
-        UserService userService) : ControllerBase
+        UserService userService,
+        GetMyProgressUseCase getMyProgressUseCase) : ControllerBase
     {
         /// <summary>
         /// Limite do corpo da requisição de upload. Fica acima dos 2 MB da imagem para que arquivos um
@@ -42,6 +44,21 @@ namespace api.Controllers
             var capabilities = await capabilityResolver.ResolveAsync(userPublicId);
 
             return Ok(capabilities.ToArray());
+        }
+
+        [Tags("Progresso")]
+        [EndpointSummary("Meu progresso")]
+        [EndpointDescription("Retorna o progresso do usuário autenticado em cada unidade ativa: total de aulas, aulas concluídas, a próxima aula a fazer e a data da última resposta. Uma aula conta como concluída quando a última resposta de cada questão respondida está correta, a mesma regra do detalhe da aula. A home usa esses dados para mostrar o progresso e o \"continuar de onde parou\".")]
+        [ProducesResponseType<List<UnityProgressResponse>>(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized, Description = "Quando o usuário não está autenticado.")]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Description = "Quando o usuário do token não existe mais.")]
+        [HttpGet("progress")]
+        public async Task<ActionResult<List<UnityProgressResponse>>> GetProgress()
+        {
+            if (!User.TryGetUserPublicId(out var userPublicId)) return Unauthorized();
+
+            var result = await getMyProgressUseCase.ExecuteAsync(userPublicId);
+            return StatusCode((int)result.StatusCode, result.Content);
         }
 
         [Tags("Perfil")]

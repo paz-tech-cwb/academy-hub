@@ -23,6 +23,7 @@ namespace application.Config
             services.AddScoped<GetUnitiesUseCase>();
             services.AddScoped<GetUnityUseCase>();
             services.AddScoped<GetQuestionnaireUseCase>();
+            services.AddScoped<GetMyProgressUseCase>();
             services.AddScoped<ImportPlaylistUseCase>();
             services.AddScoped<CreateUnityUseCase>();
             services.AddScoped<DeleteUnityUseCase>();

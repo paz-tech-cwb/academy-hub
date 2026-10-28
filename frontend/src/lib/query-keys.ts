@@ -18,6 +18,8 @@ export const queryKeys = {
     profile: (username: string) => ['user-profile', username] as const,
     /** Chave dos dados editáveis do próprio perfil (inclui o e-mail). */
     me: ['me', 'profile'] as const,
+    /** Chave do progresso do usuário autenticado em cada unidade. */
+    progress: ['me', 'progress'] as const,
   },
   unities: {
     /** Chave da listagem de todas as unidades. */

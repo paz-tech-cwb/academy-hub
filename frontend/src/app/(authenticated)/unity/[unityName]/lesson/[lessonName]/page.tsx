@@ -7,6 +7,7 @@ import { lessonsApi } from '@/lib/api/lessons';
 import { questionnaireApi } from '@/lib/api/questionnaire';
 import { queryKeys } from '@/lib/query-keys';
 import { isNotFoundError } from '@/lib/api/errors';
+import { useAuth } from '@/contexts/auth-context';
 import {
   celebrateLessonCompletion,
   celebrateUnityCompletion,
@@ -307,6 +308,7 @@ export default function LessonPage() {
   const lessonNameDisplay = decodeURIComponent(lessonNameParam);
 
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [quiz, dispatch] = useReducer(quizReducer, initialQuizState);
   const [highlightUnanswered, setHighlightUnanswered] = useState(false);
   const { verifyResult } = quiz;
@@ -372,10 +374,13 @@ export default function LessonPage() {
         nextStatus[a.publicQuestionId] = a.isCorrect;
       });
 
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.progress });
+
       if (isLessonComplete(questions, nextStatus)) {
         queryClient.invalidateQueries({ queryKey: queryKeys.lessons.detail(unityName, lessonName) });
         queryClient.invalidateQueries({ queryKey: queryKeys.lessons.list(unityName) });
         queryClient.invalidateQueries({ queryKey: queryKeys.unities.detail(unityName) });
+        if (user) queryClient.invalidateQueries({ queryKey: queryKeys.users.profile(user.username) });
       }
     },
   });

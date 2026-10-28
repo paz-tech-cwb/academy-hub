@@ -50,6 +50,22 @@ public class ProfileEntityTests
         Assert.True(level2.RequiredExperienceToNextLevel > level1.RequiredExperienceToNextLevel);
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1784)]
+    [InlineData(2075)]
+    [InlineData(5000)]
+    [InlineData(20000)]
+    public void RequiredExperienceToNextLevel_IsWhereTheLevelGoesUp(long experience)
+    {
+        var current = BuildProfile(experience);
+        var oneBelow = BuildProfile(current.RequiredExperienceToNextLevel - 1);
+        var atThreshold = BuildProfile(current.RequiredExperienceToNextLevel);
+
+        Assert.Equal(current.Level, oneBelow.Level);
+        Assert.Equal(current.Level + 1, atThreshold.Level);
+    }
+
     [Fact]
     public void LevelPercentage_WithZeroExperience_ReturnsZero()
     {

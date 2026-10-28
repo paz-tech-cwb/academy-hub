@@ -114,6 +114,18 @@ export interface Unity {
   isActive: boolean;
 }
 
+/** Progresso do usuário em uma unidade, retornado por `GET /api/me/progress`. */
+export interface UnityProgress {
+  unityPublicId: string;
+  unityName: string;
+  totalLessons: number;
+  concludedLessons: number;
+  /** Primeira aula, na ordem da unidade, ainda não concluída; `null` quando todas foram concluídas. */
+  nextLessonTitle: string | null;
+  /** Data da última resposta do usuário na unidade; `null` quando ele ainda não respondeu nada nela. */
+  lastActivityAt: string | null;
+}
+
 export interface UnityDetail extends Omit<Unity, 'isActive'> {
   wasUnityCorrectlyAnswered: boolean;
   wasCertificateAlreadyIssued: boolean;

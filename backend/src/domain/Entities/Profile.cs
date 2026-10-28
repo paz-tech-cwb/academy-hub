@@ -26,11 +26,13 @@ namespace domain.Entities
 
         private int CalculateRequiredNextLevel(long experience)
         {
-            int requiredNextLevelValue = 1000;
+            int levelSize = 1000;
+            int requiredNextLevelValue = levelSize;
 
             while (experience >= requiredNextLevelValue)
             {
-                requiredNextLevelValue += requiredNextLevelValue + LevelMultiplier;
+                levelSize += LevelMultiplier;
+                requiredNextLevelValue += levelSize;
             }
 
             return requiredNextLevelValue;

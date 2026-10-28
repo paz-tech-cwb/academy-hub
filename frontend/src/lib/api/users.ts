@@ -3,6 +3,7 @@ import {
   CoverCrop,
   LoginResponse,
   MyProfile,
+  UnityProgress,
   PaginatedLeaderboard,
   PaginatedUsers,
   UpdateMyProfileInput,
@@ -95,6 +96,16 @@ export const usersApi = {
    */
   getMyProfile: async () => {
     const { data } = await api.get<MyProfile>('/api/me/profile');
+    return data;
+  },
+
+  /**
+   * Busca o progresso do usuário autenticado em cada unidade ativa.
+   *
+   * @returns Aulas concluídas, próxima aula e última atividade de cada unidade.
+   */
+  getMyProgress: async () => {
+    const { data } = await api.get<UnityProgress[]>('/api/me/progress');
     return data;
   },
 

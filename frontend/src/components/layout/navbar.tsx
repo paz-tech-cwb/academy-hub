@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/drawer';
 import { LogOut, BookOpen, Award, Settings2, Menu, Sun, Moon, Trophy, UserRound } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { Progress } from '@/components/ui/progress';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore } from 'react';
 
@@ -52,7 +53,26 @@ export default function Navbar() {
           {user && (
             <div className="flex items-center gap-4 border-l pl-4">
               <div className="flex items-center gap-3">
-                <p className="text-sm font-bold leading-none hidden sm:block">{user.username}</p>
+                <div className="hidden sm:flex w-36 flex-col items-end gap-1.5">
+                  <p className="text-sm font-bold leading-none">{user.username}</p>
+                  {profile && (
+                    <>
+                      <p className="text-xs leading-none text-muted-foreground tabular-nums">
+                        Nível {profile.level} · {profile.experience.toLocaleString('pt-BR')} XP
+                      </p>
+                      <Progress
+                        value={profile.levelPercentage}
+                        aria-label={`Progresso no nível ${profile.level}`}
+                        className="w-full"
+                      />
+                    </>
+                  )}
+                </div>
+                {profile && (
+                  <span className="sm:hidden rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary tabular-nums">
+                    Nível {profile.level}
+                  </span>
+                )}
                 <Link href={profileHref} aria-label="Ver meu perfil" className="rounded-full">
                   <Avatar className="h-9 w-9 border-2 border-primary/20 transition-colors hover:border-primary">
                     {profile?.profilePicUrl && (

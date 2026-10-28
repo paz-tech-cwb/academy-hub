@@ -78,7 +78,7 @@ export default function UnityPage() {
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="container mx-auto px-4 py-8 flex-1">
-        <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <header className="mb-8 flex flex-col gap-6">
           <div className="space-y-2">
             <Breadcrumb className="mb-2">
               <BreadcrumbList>
