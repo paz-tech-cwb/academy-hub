@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import { useEffect, useEffectEvent, useReducer, useRef } from 'react';
+import { useEffect, useEffectEvent, useReducer, useRef, useState } from 'react';
 import { lessonsApi } from '@/lib/api/lessons';
 import { questionnaireApi } from '@/lib/api/questionnaire';
 import { queryKeys } from '@/lib/query-keys';
@@ -136,6 +136,18 @@ function getPersistedQuizState(
 }
 
 /**
+ * Monta o aviso de quais perguntas ainda estão sem resposta.
+ *
+ * @param questionNumbers - Números das perguntas sem resposta, na ordem em que aparecem.
+ * @returns Texto como "Falta responder a pergunta 2." ou "Faltam 2 perguntas: 1 e 3.".
+ */
+function describeUnansweredQuestions(questionNumbers: number[]): string {
+  if (questionNumbers.length === 1) return `Falta responder a pergunta ${questionNumbers[0]}.`;
+  const list = new Intl.ListFormat('pt-BR', { type: 'conjunction' }).format(questionNumbers.map(String));
+  return `Faltam ${questionNumbers.length} perguntas: ${list}.`;
+}
+
+/**
  * Exibe o XP ganho contando de zero até o valor final.
  * Com animações reduzidas, mostra o valor final direto.
  *
@@ -263,7 +275,7 @@ function LessonNavigation({ unityPath, nextLesson }: LessonNavigationProps) {
   return (
     <div className="space-y-3">
       {nextLesson && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground">
           A seguir: <span className="font-medium text-foreground">{nextLesson.title}</span>
         </p>
       )}
@@ -296,6 +308,7 @@ export default function LessonPage() {
 
   const queryClient = useQueryClient();
   const [quiz, dispatch] = useReducer(quizReducer, initialQuizState);
+  const [highlightUnanswered, setHighlightUnanswered] = useState(false);
   const { verifyResult } = quiz;
 
   const {
@@ -383,6 +396,28 @@ export default function LessonPage() {
 
   const videoId = getYouTubeId(lesson?.videoUrl || null);
   const lessonComplete = isLessonComplete(questions, allAnswersStatus);
+
+  const unansweredQuestionIds =
+    questions
+      ?.filter((q) => !allAnswersStatus[q.publicId] && !selectedAnswers[q.publicId])
+      .map((q) => q.publicId) ?? [];
+  const unansweredQuestionNumbers =
+    questions?.flatMap((q, index) => (unansweredQuestionIds.includes(q.publicId) ? [index + 1] : [])) ?? [];
+
+  const handleSubmit = () => {
+    if (unansweredQuestionIds.length === 0) {
+      verifyMutation.mutate();
+      return;
+    }
+
+    setHighlightUnanswered(true);
+    const firstUnansweredCard = questionCardRefs.current.get(unansweredQuestionIds[0]);
+    firstUnansweredCard?.scrollIntoView({
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+      block: 'center',
+    });
+    firstUnansweredCard?.querySelector<HTMLElement>('[role="radio"]')?.focus({ preventScroll: true });
+  };
 
   const playVerifyFeedback = useEffectEvent((result: VerifyAnswersResponse) => {
     playAnswerFeedback(result.answers, questionCardRefs.current);
@@ -518,6 +553,7 @@ export default function LessonPage() {
                 const wasJustVerified = verifyResult?.answers.some((a) => a.publicQuestionId === question.publicId);
                 const verifiedAlternativeId = verifiedAnswers[question.publicId];
                 const canAnswer = !isCorrect && acceptsAnswers;
+                const isMissingAnswer = highlightUnanswered && unansweredQuestionIds.includes(question.publicId);
 
                 return (
                   <Card
@@ -526,7 +562,7 @@ export default function LessonPage() {
                       if (element) questionCardRefs.current.set(question.publicId, element);
                       else questionCardRefs.current.delete(question.publicId);
                     }}
-                    className={`overflow-hidden transition-shadow duration-300 ${isWrong ? 'ring-2 ring-destructive/50' : isCorrect ? 'ring-2 ring-success/50' : ''}`}
+                    className={`overflow-hidden transition-shadow duration-300 ${isWrong ? 'ring-2 ring-destructive/50' : isCorrect ? 'ring-2 ring-success/50' : isMissingAnswer ? 'ring-2 ring-primary/60' : ''}`}
                   >
                     <CardHeader className="bg-muted/30">
                       <CardTitle className="text-lg flex gap-3">
@@ -545,6 +581,11 @@ export default function LessonPage() {
                           </span>
                         )}
                       </CardTitle>
+                      {isMissingAnswer && (
+                        <p className="text-sm font-medium text-primary animate-in fade-in-0 duration-300">
+                          Escolha uma alternativa para enviar.
+                        </p>
+                      )}
                     </CardHeader>
                     <CardContent className="p-6">
                       <RadioGroup
@@ -634,12 +675,18 @@ export default function LessonPage() {
                   </div>
                 )
               ) : acceptsAnswers ? (
-                <div className="flex justify-center pt-4">
+                <div className="flex flex-col items-center gap-3 pt-4">
+                  <p
+                    aria-live="polite"
+                    className={`text-center text-base ${highlightUnanswered ? 'font-medium text-primary' : 'text-muted-foreground'}`}
+                  >
+                    {unansweredQuestionNumbers.length > 0 && describeUnansweredQuestions(unansweredQuestionNumbers)}
+                  </p>
                   <Button
-                    onClick={() => verifyMutation.mutate()}
+                    onClick={handleSubmit}
                     size="lg"
                     className="w-full sm:w-64 h-14 text-lg rounded-xl shadow-xl shadow-primary/20"
-                    disabled={verifyMutation.isPending || Object.keys(selectedAnswers).filter(id => !allAnswersStatus[id]).length === 0}
+                    disabled={verifyMutation.isPending}
                   >
                     {verifyMutation.isPending ? (
                       <>Validando <Loader2 className="w-5 h-5 ml-2 animate-spin" /></>
