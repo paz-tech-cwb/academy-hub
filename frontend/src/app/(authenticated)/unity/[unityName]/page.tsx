@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { unitiesApi } from '@/lib/api/unities';
 import { lessonsApi } from '@/lib/api/lessons';
@@ -31,6 +31,7 @@ export default function UnityPage() {
   const unityNameParam = params.unityName as string;
   const unityName = unityNameParam;
   const unityNameDisplay = decodeURIComponent(unityNameParam);
+  const queryClient = useQueryClient();
 
   const router = useRouter();
   const [issuing, setIssuing] = useState(false);
@@ -55,8 +56,10 @@ export default function UnityPage() {
     setIssuing(true);
     try {
       await certificatesApi.issue(unityName);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.certificates.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.unities.detail(unityName) });
       toast.success('Certificado emitido com sucesso!');
-      router.push('/certificates');
+      router.push(`/certificates/${unityName}?emitido=1`);
     } catch (error) {
       toast.error(
         getApiErrorMessage(
@@ -103,13 +106,19 @@ export default function UnityPage() {
               <Award className="w-12 h-12 text-primary" />
               <div className="text-center">
                 <p className="text-sm font-medium mb-3">Parabéns! Você concluiu esta unidade.</p>
-                <Button
-                  onClick={issueCertificate}
-                  disabled={issuing || unityDetails.wasCertificateAlreadyIssued}
-                  className="w-full shadow-lg shadow-primary/20"
-                >
-                  {issuing ? 'Emitindo...' : unityDetails.wasCertificateAlreadyIssued ? 'Certificado Emitido' : 'Emitir Certificado'}
-                </Button>
+                {unityDetails.wasCertificateAlreadyIssued ? (
+                  <Button asChild className="w-full">
+                    <Link href={`/certificates/${unityName}`}>Ver certificado</Link>
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={issueCertificate}
+                    disabled={issuing}
+                    className="w-full shadow-lg shadow-primary/20"
+                  >
+                    {issuing ? 'Emitindo...' : 'Emitir Certificado'}
+                  </Button>
+                )}
               </div>
             </div>
           )}

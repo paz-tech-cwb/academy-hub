@@ -4,14 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import { certificatesApi } from '@/lib/api/certificates';
 import { queryKeys } from '@/lib/query-keys';
 import Navbar from '@/components/layout/navbar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, Calendar, Download } from 'lucide-react';
+import { ActionTile } from '@/components/action-tile';
+import { Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Link from 'next/link';
-import { toast } from 'sonner';
 
 export default function CertificatesPage() {
   const { data: certificates, isLoading } = useQuery({
@@ -28,41 +27,20 @@ export default function CertificatesPage() {
           <p className="text-muted-foreground">Aqui você encontra todas as suas conquistas no Academy Hub.</p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {isLoading && !certificates &&
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="rounded-xl bg-card ring-1 ring-foreground/10 p-6 space-y-4">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-10 w-full" />
-              </div>
+              <Skeleton key={i} className="h-[88px] rounded-xl" />
             ))}
 
           {certificates?.map((cert) => (
-            <Card key={cert.unityName} variant="interactive" className="group relative">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
-                <Award className="w-24 h-24 text-primary" />
-              </div>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Award className="w-5 h-5 text-primary" />
-                  {cert.unityName}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  Concluído em: {format(new Date(cert.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                </div>
-                <Button
-                  className="w-full gap-2"
-                  variant="outline"
-                  onClick={() => toast.info('Download do PDF em desenvolvimento...')}
-                >
-                  <Download className="w-4 h-4" /> Baixar Certificado
-                </Button>
-              </CardContent>
-            </Card>
+            <ActionTile
+              key={cert.unityName}
+              icon={Award}
+              title={cert.unityName}
+              description={`Concluído em ${format(new Date(cert.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`}
+              href={`/certificates/${encodeURIComponent(cert.unityName)}`}
+            />
           ))}
         </div>
 

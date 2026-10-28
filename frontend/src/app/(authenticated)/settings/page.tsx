@@ -1,13 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import Navbar from '@/components/layout/navbar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { ActionTile } from '@/components/action-tile';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import {
   BookOpenCheck,
@@ -35,9 +34,7 @@ interface SettingsItem {
   section: string;
   title: string;
   description: string;
-  actionLabel: string;
   icon: LucideIcon;
-  iconClassName: string;
   /**
    * Capacidades que liberam o card. Basta ter **uma** delas: a tela de
    * conteúdos, por exemplo, serve tanto quem gerencia unidades e aulas quanto
@@ -45,13 +42,14 @@ interface SettingsItem {
    * própria senha.
    */
   capabilities: string[];
-  action: () => void;
+  /** Tela de destino; sem ela, o item abre uma ação na própria página, como um diálogo. */
+  href?: string;
+  onClick?: () => void;
 }
 
 export default function SettingsPage() {
   const { isReady } = useRequireAuth();
   const { has, isLoading: capabilitiesLoading } = useCapabilities();
-  const router = useRouter();
   const [showImportModal, setShowImportModal] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [search, setSearch] = useState('');
@@ -64,11 +62,9 @@ export default function SettingsPage() {
         title: 'Trocar senha',
         description:
           'Defina uma nova senha para a sua conta, confirmando a senha atual.',
-        actionLabel: 'Trocar senha',
         icon: Lock,
-        iconClassName: 'text-primary',
         capabilities: [],
-        action: () => setShowChangePassword(true),
+        onClick: () => setShowChangePassword(true),
       },
       {
         id: 'manage-content',
@@ -76,11 +72,9 @@ export default function SettingsPage() {
         title: 'Configurar conteúdos',
         description:
           'Crie e organize unidades, aulas, questões e alternativas em uma única tela.',
-        actionLabel: 'Configurar conteúdos',
         icon: BookOpenCheck,
-        iconClassName: 'text-primary',
         capabilities: ['content.manage', 'content.read', 'questionnaire.manage'],
-        action: () => router.push('/settings/content'),
+        href: '/settings/content',
       },
       {
         id: 'import-playlist',
@@ -88,22 +82,18 @@ export default function SettingsPage() {
         title: 'Playlist do YouTube',
         description:
           'Importe vídeos de uma playlist do YouTube como uma nova unidade de treinamento.',
-        actionLabel: 'Importar playlist',
         icon: ListVideo,
-        iconClassName: 'text-destructive',
         capabilities: ['playlist.import'],
-        action: () => setShowImportModal(true),
+        onClick: () => setShowImportModal(true),
       },
       {
         id: 'manage-users',
         section: 'Usuários',
         title: 'Gerenciar usuários',
         description: 'Visualize, edite status, função e senha dos usuários da plataforma.',
-        actionLabel: 'Gerenciar usuários',
         icon: Users,
-        iconClassName: 'text-primary',
         capabilities: ['users.manage'],
-        action: () => router.push('/settings/users'),
+        href: '/settings/users',
       },
       {
         id: 'manage-roles',
@@ -111,25 +101,21 @@ export default function SettingsPage() {
         title: 'Configuração de funções',
         description:
           'Defina as funções que podem ser atribuídas aos usuários e as funcionalidades de cada uma.',
-        actionLabel: 'Configurar funções',
         icon: UserCog,
-        iconClassName: 'text-primary',
         capabilities: ['permissions.manage'],
-        action: () => router.push('/settings/roles'),
+        href: '/settings/roles',
       },
       {
         id: 'manage-capabilities',
         section: 'Permissionamento',
         title: 'Consultar funcionalidades',
         description: 'Veja o catálogo de funcionalidades que podem ser atribuídas às funções.',
-        actionLabel: 'Consultar funcionalidades',
         icon: KeyRound,
-        iconClassName: 'text-primary',
         capabilities: ['permissions.manage'],
-        action: () => router.push('/settings/capabilities'),
+        href: '/settings/capabilities',
       },
     ],
-    [router],
+    [],
   );
 
   /** Cards liberados para o usuário, antes da busca. */
@@ -190,7 +176,14 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
-        <main className="container mx-auto px-4 py-8 flex-1">{header}</main>
+        <main className="container mx-auto px-4 py-8 flex-1">
+          {header}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" aria-busy="true">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-[88px] rounded-xl" />
+            ))}
+          </div>
+        </main>
       </div>
     );
   }
@@ -223,23 +216,17 @@ export default function SettingsPage() {
         ) : (
           sections.map(([section, items]) => (
             <section key={section} className="mb-8">
-              <h2 className="text-lg font-semibold mb-4">{section}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <h2 className="text-lg font-semibold mb-3">{section}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {items.map((item) => (
-                  <Card key={item.id} variant="interactive">
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
-                        <item.icon className={`w-5 h-5 ${item.iconClassName}`} />
-                        <CardTitle className="text-base">{item.title}</CardTitle>
-                      </div>
-                      <CardDescription>{item.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button className="w-full" onClick={item.action}>
-                        {item.actionLabel}
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <ActionTile
+                    key={item.id}
+                    icon={item.icon}
+                    title={item.title}
+                    description={item.description}
+                    href={item.href}
+                    onClick={item.onClick}
+                  />
                 ))}
               </div>
             </section>
