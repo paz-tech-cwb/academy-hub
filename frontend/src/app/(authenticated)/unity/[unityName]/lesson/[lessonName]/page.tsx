@@ -376,7 +376,7 @@ export default function LessonPage() {
                   >
                     <CardHeader className="bg-muted/30">
                       <CardTitle className="text-lg flex gap-3">
-                        <span className="text-primary opacity-50">{qIndex + 1}.</span>
+                        <span className="text-primary tabular-nums">{qIndex + 1}.</span>
                         <span className="flex-1">{question.statement}</span>
                         {(isCorrect || isWrong) && (
                           <span
