@@ -319,7 +319,7 @@ export default function LessonPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Sobre esta aula</CardTitle>
+              <CardTitle className="text-lg">Sobre esta aula</CardTitle>
             </CardHeader>
             <CardContent>
               {lessonLoading && !lesson ? (
@@ -329,7 +329,7 @@ export default function LessonPage() {
                   <Skeleton className="h-4 w-3/4" />
                 </div>
               ) : (
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                <p className="max-w-prose text-base text-muted-foreground leading-relaxed text-pretty whitespace-pre-wrap">
                   {lesson?.description || 'Nenhuma descrição detalhada disponível.'}
                 </p>
               )}
@@ -406,7 +406,7 @@ export default function LessonPage() {
                             onClick={() => handleAnswerSelect(question.publicId, alt.publicId)}
                           >
                             <RadioGroupItem value={alt.publicId} id={alt.publicId} />
-                            <Label htmlFor={alt.publicId} className="flex-1 cursor-pointer font-medium leading-relaxed">
+                            <Label htmlFor={alt.publicId} className="flex-1 cursor-pointer text-base font-medium leading-relaxed">
                               {alt.text}
                             </Label>
                           </div>
@@ -434,7 +434,7 @@ export default function LessonPage() {
                       <h4 className="text-xl font-bold mb-1">
                         {lessonComplete ? 'Excelente!' : 'Ainda não foi dessa vez'}
                       </h4>
-                      <p className="text-muted-foreground">
+                      <p className="text-base text-muted-foreground">
                         {verifyResult.message || (lessonComplete ? 'Você acertou todas as questões desta aula!' : 'Algumas respostas estão incorretas. Tente novamente.')}
                       </p>
                       {verifyResult.currentPointsWeight > 0 && (
